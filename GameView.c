@@ -9,11 +9,13 @@
 #include "Map.h" 
 
 #define CHARS_PER_TURN 7
+#define SAME_PLACE_NEXT_TURN 8
 static Round roundCalc(char *pastPlays);  
 static PlayerID getPlayer(char *pastPlays);
+static int calcScore(char *pastPlays);
    
 struct gameView {
-    Round round;
+    Round currRound;
     PlayerID currPlayer;
     int score;
     int trail[NUM_PLAYERS][TRAIL_SIZE];
@@ -25,10 +27,10 @@ struct gameView {
 // Creates a new GameView to summarise the current state of the game
 GameView newGameView(char *pastPlays, PlayerMessage messages[])
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     GameView gv = malloc(sizeof(struct gameView));
-    gv->round = roundCalc(pastPlays);
+    gv->currRound = roundCalc(pastPlays);
     gv->currPlayer = getPlayer(pastPlays); 
+    gv->score = calcScore(pastPlays);
     return gv;
 }
      
@@ -44,10 +46,11 @@ void disposeGameView(GameView toBeDeleted)
 static Round roundCalc(char *pastPlays){
     char *ptr = pastPlays;
     Round round = 0;  
-    while(*ptr != '\0'){
-        if(ptr != pastPlays){  //checks for the null terminator b4 moving onto the next turn's info (if statement prevents it happening for the first round) 
-            ptr++;
-        }
+    while(*ptr != '\0' || *(&ptr[1]) == '\0'){ //we arent sure whether a space is added before or after a player turn has commenced
+        if(ptr != pastPlays){
+            ptr++; //moves ptr to start of next turn if ptr is not at the start
+        } 
+
         if(*ptr == 'G'){ //evrytime "G" is  seen, it signifies a new round 
             round++;
         }
@@ -73,20 +76,44 @@ static PlayerID getPlayer(char *pastPlays){
     } //checks the last person that played and returns the next person that should be playing
     return player; 
 }
+
+static int calcScore(char *pastPlays){
+    char *ptr = pastPlays; //pointer to player character
+    char *loc = &pastPlays[1]; //pointer to first location character
+    char *act = &pastPlays[5]; //pointer to action phase character
+    int score = GAME_START_SCORE;
+
+    while(*ptr != '\0' || *(&ptr[1]) == '\0'){
+        if(ptr != pastPlays){
+            ptr++; //moves ptr to start of next turn if ptr is not at the start
+        }
+
+        if(*ptr == 'D'){  //dracula moved
+            score -= SCORE_LOSS_DRACULA_TURN; 
+        } else if(*ptr == 'D' && *act == 'V'){  //a vampire matured
+            score -= SCORE_LOSS_VAMPIRE_MATURES;
+        } else if (*ptr != 'D' && *loc == 'J'){  //a hunter is teleported to hospital
+            score -= SCORE_LOSS_HUNTER_HOSPITAL;
+        }
+
+        ptr += CHARS_PER_TURN; //increments ptr to space b4 next turn's info
+        act += SAME_PLACE_NEXT_TURN; //increments the pointer to the same place in the next turn 
+        loc += SAME_PLACE_NEXT_TURN;
+    }
+    return score;
+}      
 //// Functions to return simple information about the current state of the game
 
 // Get the current round
 Round getRound(GameView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return currentView->currRound;
 }
 
 // Get the id of current player - ie whose turn is it?
 PlayerID getCurrentPlayer(GameView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return currentView->currPlayer;
 }
 
 // Get the current score
