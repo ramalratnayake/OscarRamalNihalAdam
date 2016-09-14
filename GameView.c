@@ -14,8 +14,7 @@ static Round roundCalc(char *pastPlays);
 static PlayerID getPlayer(char *pastPlays);
 static int calcScore(char *pastPlays);
 static void playerLocation(GameView gv, char *pastPlays);
-static void lastSix(GameView currentView, char *pastPlays);
-
+   
 struct gameView {
     Round currRound;
     PlayerID currPlayer;
@@ -23,7 +22,7 @@ struct gameView {
     PlayerID trail[NUM_PLAYERS][TRAIL_SIZE];
     int health[NUM_PLAYERS];
     int currLocation[NUM_PLAYERS];
-    int location[NUM_PLAYERS][TRAIL_SIZE];
+    Map m;
 };    
 
 // Creates a new GameView to summarise the current state of the game
@@ -33,21 +32,11 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
     gv->currRound = roundCalc(pastPlays);
     gv->currPlayer = getPlayer(pastPlays); 
     gv->score = calcScore(pastPlays);
-    
-    int i = 0;
-    while(i<NUM_PLAYERS){ 
-        int j = 0;
-        while(j<TRAIL_SIZE){
-            gv->location[i][j]=-1;
-            j++;
-        }
-        i++;
-    } 
-    lastSix(gv, pastPlays);
 
     playerLocation(gv,pastPlays);
 
-    // to do once functions included
+    gv->m = newMap();
+
     return gv;
 }
      
@@ -78,7 +67,7 @@ static Round roundCalc(char *pastPlays){
 
 //scans through the last turn info and returns the next player that shud be playing
 static PlayerID getPlayer(char *pastPlays){
-/*    char *ptr = &pastPlays[strlen(pastPlays) - 1]; //sets the pointer at the end of the string
+    char *ptr = &pastPlays[strlen(pastPlays) - 1]; //sets the pointer at the end of the string
     while(*ptr != ' '){
         ptr--;
     } //traverses te list backwards until it finds the 2nd last player
@@ -92,22 +81,6 @@ static PlayerID getPlayer(char *pastPlays){
         case 'D' : player = PLAYER_LORD_GODALMING;
     } //checks the last person that played and returns the next person that should be playing
     return player; 
-    */
-    if(strlen(pastPlays) == 0){
-        return PLAYER_LORD_GODALMING;
-    }
-    char ptr = pastPlays[strlen(pastPlays) - 7];
-    PlayerID player;
-    switch(ptr){
-        case 'G' : player = PLAYER_DR_SEWARD; break;
-        case 'S' : player = PLAYER_VAN_HELSING; break;
-        case 'H' : player = PLAYER_MINA_HARKER; break;
-        case 'M' : player = PLAYER_DRACULA; break;
-        case 'D' : player = PLAYER_LORD_GODALMING; break;
-    } //checks the last person that played and returns the next person that should be playing
-    return player;
-}
-
 }
 
 static int calcScore(char *pastPlays){
@@ -267,64 +240,49 @@ void getHistory(GameView currentView, PlayerID player,
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
 }
 
-//fills array recording the last 6 location ids of all players
-static void lastSix(GameView currentView, char *pastPlays){
-    //if everyone has taken at least 6 turns
-    if((currentView->currRound)>=6){
-	//goes to the 6th last round
-    	int index = ((currentView->currRound)-6)*8 + 1;
-        PlayerID i = 0;
-        while(i<NUM_PLAYERS){
-            int turn = 0;
-			while(turn<6){
-				currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
-                turn++;
-                index+=40;
-            }
-            i++;
-            index = ((currentView->currRound)-6)*8 + 1 + 8*i;
-        }
-    } else {
-		int index = 1;
-	    PlayerID i = 0;
-        while(i<currentView->currPlayer){
-            int turn = 0;
-			while(turn<((currentView->currRound)+1)){
-				currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
-                turn++;
-                index+=40;
-            }
-            i++;
-            index = 1 + 8*i;
-        }
-
-        while(i<NUM_PLAYERS){
-            int turn = 0;
-			while(turn<(currentView->currRound)){
-				currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
-                turn++;
-                index+=40;
-            }
-            i++;
-            index = 1 + 8*i;
-        }
-    } 
-}
-
-
 //// Functions that query the map to find information about connectivity
 
 // Returns an array of LocationIDs for all directly connected currLocation
+
+// connectedLocations() returns an array of LocationID that represent
+//   all locations that are connected to the given LocationID.
+// road, rail and sea are connections should only be considered
+//   if the road, rail, sea parameters are TRUE.
+    
+// The size of the array is stored in the variable pointed to by numLocations
+// The array can be in any order but must contain unique entries
+// Your function must take into account the round and player id for rail travel
+// Your function must take into account that Dracula can't move to
+//   the hospital or travel by rail but need not take into account Dracula's trail
+// The destination 'from' should be included in the array
+
 
 LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
     
-    // to do
     // start will be using getlocation for the player
     // scan through populating numcurrLocation 
 
+    int *currLocations = malloc( (*numcurrLocation) *sizeof(int));
+    int i = 0;
+    currLocations[i] = from; 
+    i++;
 
-    return NULL;
+    if(player == PLAYER_DRACULA) {
+        // Drac doesnt have access to hospital or rail
+    } else {
+        // for hunters
+        // using simliar map implementation to the lab
+
+        // need function within Map.c
+        /*VList curr = currentView->m->connections[from];
+        while(curr != NULL){
+            currLocation[i] = curr->v;
+            i++;
+            curr = curr->next;
+        }*/
+    }
+    return currLocations;
 }
