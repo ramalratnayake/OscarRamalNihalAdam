@@ -21,7 +21,7 @@ struct gameView {
     int score;
     PlayerID trail[NUM_PLAYERS][TRAIL_SIZE];
     int health[NUM_PLAYERS];
-    int locations[NUM_PLAYERS];
+    int currLocation[NUM_PLAYERS];
 };    
 
 // Creates a new GameView to summarise the current state of the game
@@ -142,11 +142,11 @@ static void playerLocation(GameView gv, char *pastPlays) {
 
     if (getRound(gv) == 0) {
 
-        gv->locations[PLAYER_LORD_GODALMING] = UNKNOWN_LOCATION;
-        gv->locations[PLAYER_DR_SEWARD] = UNKNOWN_LOCATION;
-        gv->locations[PLAYER_VAN_HELSING] = UNKNOWN_LOCATION;
-        gv->locations[PLAYER_MINA_HARKER] = UNKNOWN_LOCATION;
-        gv->locations[PLAYER_DRACULA] = UNKNOWN_LOCATION;
+        gv->currLocation[PLAYER_LORD_GODALMING] = UNKNOWN_LOCATION;
+        gv->currLocation[PLAYER_DR_SEWARD] = UNKNOWN_LOCATION;
+        gv->currLocation[PLAYER_VAN_HELSING] = UNKNOWN_LOCATION;
+        gv->currLocation[PLAYER_MINA_HARKER] = UNKNOWN_LOCATION;
+        gv->currLocation[PLAYER_DRACULA] = UNKNOWN_LOCATION;
         return;
     }
 
@@ -157,7 +157,7 @@ static void playerLocation(GameView gv, char *pastPlays) {
             abrv[1] = *(ptr += 2);
             abrv[2] = '\0';
 
-            gv->locations[PLAYER_LORD_GODALMING] = abbrevToID(abrv);
+            gv->currLocation[PLAYER_LORD_GODALMING] = abbrevToID(abrv);
             i++;
             free(abrv);
 
@@ -167,7 +167,7 @@ static void playerLocation(GameView gv, char *pastPlays) {
             abrv[1] = *(ptr += 2);
             abrv[2] = '\0';
 
-            gv->locations[PLAYER_DR_SEWARD] = abbrevToID(abrv);
+            gv->currLocation[PLAYER_DR_SEWARD] = abbrevToID(abrv);
             i++;
             free(abrv);
 
@@ -177,7 +177,7 @@ static void playerLocation(GameView gv, char *pastPlays) {
             abrv[1] = *(ptr += 2);
             abrv[2] = '\0';
 
-            gv->locations[PLAYER_VAN_HELSING] = abbrevToID(abrv);
+            gv->currLocation[PLAYER_VAN_HELSING] = abbrevToID(abrv);
             i++;
             free(abrv);
 
@@ -187,7 +187,7 @@ static void playerLocation(GameView gv, char *pastPlays) {
             abrv[1] = *(ptr += 2);
             abrv[2] = '\0';
             
-            gv->locations[PLAYER_MINA_HARKER] = abbrevToID(abrv);
+            gv->currLocation[PLAYER_MINA_HARKER] = abbrevToID(abrv);
             i++;
             free(abrv);
 
@@ -197,7 +197,7 @@ static void playerLocation(GameView gv, char *pastPlays) {
             abrv[1] = *(ptr += 2);
             abrv[2] = '\0';
 
-            gv->locations[PLAYER_DRACULA] = abbrevToID(abrv);
+            gv->currLocation[PLAYER_DRACULA] = abbrevToID(abrv);
             i++;
             free(abrv);
         }
@@ -210,7 +210,7 @@ static void playerLocation(GameView gv, char *pastPlays) {
 // Get the current location id of a given player
 LocationID getLocation(GameView currentView, PlayerID player)
 {
-    if(currentView->locations[player] == UNKNOWN_LOCATION) {
+    if(currentView->currLocation[player] == UNKNOWN_LOCATION) {
         return UNKNOWN_LOCATION;
     } 
 
@@ -227,7 +227,7 @@ LocationID getLocation(GameView currentView, PlayerID player)
 //   TELEPORT         if Dracula apparated back to Castle Dracula
 //   LOCATION_UNKNOWN if the round number is 0
     
-    return currentView->locations[player];
+    return currentView->currLocation[player];
 }
 
 //// Functions that return information about the history of the game
@@ -241,16 +241,16 @@ void getHistory(GameView currentView, PlayerID player,
 
 //// Functions that query the map to find information about connectivity
 
-// Returns an array of LocationIDs for all directly connected locations
+// Returns an array of LocationIDs for all directly connected currLocation
 
-LocationID *connectedLocations(GameView currentView, int *numLocations,
+LocationID *connectedcurrLocation(GameView currentView, int *numcurrLocation,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
     
     // to do
     // start will be using getlocation for the player
-    // scan through populating numLocations 
+    // scan through populating numcurrLocation 
 
 
     return NULL;
