@@ -43,7 +43,7 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
         }
         i++;
     } 
-	lastSix(gv, pastPlays);
+    lastSix(gv, pastPlays);
 
     playerLocation(gv,pastPlays);
 
