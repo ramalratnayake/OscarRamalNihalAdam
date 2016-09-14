@@ -123,8 +123,7 @@ PlayerID getCurrentPlayer(GameView currentView)
 // Get the current score
 int getScore(GameView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return currentView->score;
 }
 
 // Get the current health points for a given player
@@ -201,8 +200,8 @@ static void playerLocation(GameView gv, char *pastPlays) {
             i++;
             free(abrv);
         }
-        
-        ptr += 3;
+        // each player "action" is seperated by 8 spaces, eg "GMN.... SPL.... "
+        ptr += 8;
 
     } while( (*ptr != '\0' || *(&ptr[1]) == '\0') || *ptr != 'G' );
 }
@@ -243,7 +242,7 @@ void getHistory(GameView currentView, PlayerID player,
 
 // Returns an array of LocationIDs for all directly connected currLocation
 
-LocationID *connectedcurrLocation(GameView currentView, int *numcurrLocation,
+LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
