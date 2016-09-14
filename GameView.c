@@ -14,7 +14,8 @@ static Round roundCalc(char *pastPlays);
 static PlayerID getPlayer(char *pastPlays);
 static int calcScore(char *pastPlays);
 static void playerLocation(GameView gv, char *pastPlays);
-   
+static void lastSix(GameView currentView, char *pastPlays);
+
 struct gameView {
     Round currRound;
     PlayerID currPlayer;
@@ -22,6 +23,7 @@ struct gameView {
     PlayerID trail[NUM_PLAYERS][TRAIL_SIZE];
     int health[NUM_PLAYERS];
     int currLocation[NUM_PLAYERS];
+    int location[NUM_PLAYERS][TRAIL_SIZE];
 };    
 
 // Creates a new GameView to summarise the current state of the game
@@ -31,6 +33,17 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
     gv->currRound = roundCalc(pastPlays);
     gv->currPlayer = getPlayer(pastPlays); 
     gv->score = calcScore(pastPlays);
+    
+    int i = 0;
+    while(i<NUM_PLAYERS){ 
+        int j = 0;
+        while(j<TRAIL_SIZE){
+            gv->location[i][j]=-1;
+            j++;
+        }
+        i++;
+    } 
+	lastSix(gv, pastPlays);
 
     playerLocation(gv,pastPlays);
 
@@ -237,6 +250,51 @@ void getHistory(GameView currentView, PlayerID player,
 {
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
 }
+
+//fills array recording the last 6 location ids of all players
+static void lastSix(GameView currentView, char *pastPlays){
+    //if everyone has taken at least 6 turns
+    if((currentView->currRound)>=6){
+	//goes to the 6th last round
+    	int index = ((currentView->currRound)-6)*8 + 1;
+        PlayerID i = 0;
+        while(i<NUM_PLAYERS){
+            int turn = 0;
+			while(turn<6){
+				currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
+                turn++;
+                index+=40;
+            }
+            i++;
+            index = ((currentView->currRound)-6)*8 + 1 + 8*i;
+        }
+    } else {
+		int index = 1;
+	    PlayerID i = 0;
+        while(i<currentView->currPlayer){
+            int turn = 0;
+			while(turn<((currentView->currRound)+1)){
+				currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
+                turn++;
+                index+=40;
+            }
+            i++;
+            index = 1 + 8*i;
+        }
+
+        while(i<NUM_PLAYERS){
+            int turn = 0;
+			while(turn<(currentView->currRound)){
+				currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
+                turn++;
+                index+=40;
+            }
+            i++;
+            index = 1 + 8*i;
+        }
+    } 
+}
+
 
 //// Functions that query the map to find information about connectivity
 
