@@ -13,16 +13,16 @@
 static Round roundCalc(char *pastPlays);  
 static PlayerID getPlayer(char *pastPlays);
 static int calcScore(char *pastPlays);
+static void playerLocation(GameView gv, char *pastPlays);
    
 struct gameView {
     Round currRound;
     PlayerID currPlayer;
     int score;
-    int trail[NUM_PLAYERS][TRAIL_SIZE];
-    int health[NUM_PLAYERS];       
-};
-
-    
+    PlayerID trail[NUM_PLAYERS][TRAIL_SIZE];
+    int health[NUM_PLAYERS];
+    int locations[NUM_PLAYERS]; // past 6 locations of the players
+};    
 
 // Creates a new GameView to summarise the current state of the game
 GameView newGameView(char *pastPlays, PlayerMessage messages[])
@@ -31,6 +31,10 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
     gv->currRound = roundCalc(pastPlays);
     gv->currPlayer = getPlayer(pastPlays); 
     gv->score = calcScore(pastPlays);
+
+    playerLocation(gv,pastPlays);
+
+    // to do once functions included
     return gv;
 }
      
@@ -130,11 +134,100 @@ int getHealth(GameView currentView, PlayerID player)
     return 0;
 }
 
+
+static void playerLocation(GameView gv, char *pastPlays) {
+
+    char *ptr = pastPlays;
+    int i = 0;
+
+    if (getRound(gv) == 0) {
+
+        gv->locations[PLAYER_LORD_GODALMING] = UNKNOWN_LOCATION;
+        gv->locations[PLAYER_DR_SEWARD] = UNKNOWN_LOCATION;
+        gv->locations[PLAYER_VAN_HELSING] = UNKNOWN_LOCATION;
+        gv->locations[PLAYER_MINA_HARKER] = UNKNOWN_LOCATION;
+        gv->locations[PLAYER_DRACULA] = UNKNOWN_LOCATION;
+        return;
+    }
+
+    do {
+        if(*ptr == 'G') {
+            char *abrv = malloc(3*sizeof(char));
+            abrv[0] = *(ptr += 1);
+            abrv[1] = *(ptr += 2);
+            abrv[2] = '\0';
+
+            gv->locations[PLAYER_LORD_GODALMING] = abbrevToID(abrv);
+            i++;
+            free(abrv);
+
+        } else if(*ptr == 'S') {
+            char *abrv = malloc(3*sizeof(char));
+            abrv[0] = *(ptr += 1);
+            abrv[1] = *(ptr += 2);
+            abrv[2] = '\0';
+
+            gv->locations[PLAYER_DR_SEWARD] = abbrevToID(abrv);
+            i++;
+            free(abrv);
+
+        } else if(*ptr == 'V') {
+            char *abrv = malloc(3*sizeof(char));
+            abrv[0] = *(ptr += 1);
+            abrv[1] = *(ptr += 2);
+            abrv[2] = '\0';
+
+            gv->locations[PLAYER_VAN_HELSING] = abbrevToID(abrv);
+            i++;
+            free(abrv);
+
+        } else if(*ptr == 'M') {
+            char *abrv = malloc(3*sizeof(char));
+            abrv[0] = *(ptr += 1);
+            abrv[1] = *(ptr += 2);
+            abrv[2] = '\0';
+            
+            gv->locations[PLAYER_MINA_HARKER] = abbrevToID(abrv);
+            i++;
+            free(abrv);
+
+        } else if(*ptr == 'D') {
+            char *abrv = malloc(3*sizeof(char));
+            abrv[0] = *(ptr += 1);
+            abrv[1] = *(ptr += 2);
+            abrv[2] = '\0';
+
+            gv->locations[PLAYER_DRACULA] = abbrevToID(abrv);
+            i++;
+            free(abrv);
+        }
+        
+        ptr += 3;
+
+    } while( (*ptr != '\0' || *(&ptr[1]) == '\0') || *ptr != 'G' );
+}
+
 // Get the current location id of a given player
 LocationID getLocation(GameView currentView, PlayerID player)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    if(currentView->locations[player] == UNKNOWN_LOCATION) {
+        return UNKNOWN_LOCATION;
+    } 
+
+// Otherwise for a hunter it should be an integer in the interval [0..70]
+// For dracula it should return his location at the start of the current round
+// Possible values for this:
+//   in the interval [0...70] if Dracula was known to be in a city or sea
+//   CITY_UNKNOWN     if Dracula was in an unknown city
+//   SEA_UNKNOWN      if Dracula was in an unknown sea
+//   HIDE             if Dracula was known to have made a hide move
+//   DOUBLE_BACK_N    where N is [0...5], if Dracula was known to have
+//                    made a double back move N positions back in the trail
+//                    e.g. DOUBLE_BACK_1 is the last place place he visited
+//   TELEPORT         if Dracula apparated back to Castle Dracula
+//   LOCATION_UNKNOWN if the round number is 0
+    
+    return currentView->locations[player];
 }
 
 //// Functions that return information about the history of the game
@@ -154,6 +247,11 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
+    
+    // to do
+    // start will be using getlocation for the player
+    // scan through populating numLocations 
+
+
     return NULL;
 }
