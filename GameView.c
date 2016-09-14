@@ -94,7 +94,6 @@ static PlayerID getPlayer(char *pastPlays){
     return player; 
     */
     if(strlen(pastPlays) == 0){
-    	printf("test\n");
         return PLAYER_LORD_GODALMING;
     }
     char ptr = pastPlays[strlen(pastPlays) - 7];
