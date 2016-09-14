@@ -21,7 +21,7 @@ struct gameView {
     int score;
     PlayerID trail[NUM_PLAYERS][TRAIL_SIZE];
     int health[NUM_PLAYERS];
-    int locations[NUM_PLAYERS]; // past 6 locations of the players
+    int locations[NUM_PLAYERS];
 };    
 
 // Creates a new GameView to summarise the current state of the game
