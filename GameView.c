@@ -78,21 +78,6 @@ static Round roundCalc(char *pastPlays){
 
 //scans through the last turn info and returns the next player that shud be playing
 static PlayerID getPlayer(char *pastPlays){
-/*    char *ptr = &pastPlays[strlen(pastPlays) - 1]; //sets the pointer at the end of the string
-    while(*ptr != ' '){
-        ptr--;
-    } //traverses te list backwards until it finds the 2nd last player
-    ptr++; 
-    PlayerID player;
-    switch(*ptr){
-        case 'G' : player = PLAYER_DR_SEWARD;
-        case 'S' : player = PLAYER_VAN_HELSING;
-        case 'H' : player = PLAYER_MINA_HARKER;
-        case 'M' : player = PLAYER_DRACULA;
-        case 'D' : player = PLAYER_LORD_GODALMING;
-    } //checks the last person that played and returns the next person that should be playing
-    return player; 
-    */
     if(strlen(pastPlays) == 0){
         return PLAYER_LORD_GODALMING;
     }
