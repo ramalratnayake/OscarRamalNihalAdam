@@ -134,14 +134,46 @@ int numE(Map g, TransportID type)
     return nE;
 }
 
-void connectedLocs(Map g ,int *locs, int from) {
+static int notHere(int *locs, int x, int size) {
+   int i = 0;
+   while(i < size) {
+      if(locs[i] == x) {
+         return 0;
+      }
+      i++;
+   }
+   return 1;
+}
+
+int connectedLocs(Map g ,int *locs, int from, int road, int rail, int sea) {
    VList curr = g->connections[from];
    int count = 0; 
-   
+   locs[count++] = from;
    while (curr != NULL){
-      locs[count] = curr->v;
+      
+      if( notHere(locs, curr->v, count) != 0) {      
+         if(road == 1) {
+            if ( curr->type == ROAD ) {
+               locs[count] = curr->v;
+               count++;
+            }
+         }
+         if(rail == 1) {
+            if ( curr->type == RAIL ) {
+               locs[count] = curr->v;
+               count++;
+            }
+         }
+         if(sea == 1) {
+            if ( curr->type == BOAT ) {
+               locs[count] = curr->v;
+               count++;
+            }
+         }
+      }
       curr = curr->next;
    }
+   return count;
 }
 
 

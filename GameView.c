@@ -228,7 +228,8 @@ static void playerLocation(GameView gv, char *pastPlays) {
 
             char *cityCheck = "C?";
             char *seaCheck = "S?";
-            // check for teleport
+            char *teleportCheck = "TP";
+            char *hideCheck = "HI";
 
             if(strcmp(abrv, cityCheck) == 0 ) {
                 gv->currLocation[PLAYER_DRACULA] = CITY_UNKNOWN;
@@ -247,6 +248,10 @@ static void playerLocation(GameView gv, char *pastPlays) {
                 } else if (abrv[1] == '5') {
                     gv->currLocation[PLAYER_DRACULA] = DOUBLE_BACK_5;
                 }
+            } else if (strcmp(abrv, teleportCheck) == 0 ) {
+                gv->currLocation[PLAYER_DRACULA] = TELEPORT;
+            } else if (strcmp(abrv, hideCheck) == 0 ) {
+                gv->currLocation[PLAYER_DRACULA] = HIDE;
             } else {
                 gv->currLocation[PLAYER_DRACULA] = abbrevToID(abrv);
             }
@@ -359,14 +364,14 @@ LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
     // start will be using getlocation for the player
     // scan through populating numcurrLocation 
     // can modify map
-
-    int *locs = malloc( (*numcurrLocation)*sizeof(int));
+    
+    int *locs = malloc(100*sizeof(int));
 
     if (player == PLAYER_DRACULA) {
         // cant move to hospital, or travel by rail
     } else {
         // scan map normally
-        connectedLocs(currentView->m,locs,from);
+        *numcurrLocation = connectedLocs(currentView->m,locs,from,road,rail,sea);
     }
 
     return locs;
