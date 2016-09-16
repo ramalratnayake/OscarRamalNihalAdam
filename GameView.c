@@ -169,7 +169,6 @@ static void playerLocation(GameView gv, char *pastPlays) {
     char *ptr = pastPlays;
 
     if (getRound(gv) == 0) {
-
         gv->currLocation[PLAYER_LORD_GODALMING] = UNKNOWN_LOCATION;
         gv->currLocation[PLAYER_DR_SEWARD] = UNKNOWN_LOCATION;
         gv->currLocation[PLAYER_VAN_HELSING] = UNKNOWN_LOCATION;
@@ -257,7 +256,6 @@ static void playerLocation(GameView gv, char *pastPlays) {
             }
             free(abrv);
         }
-        // each player "action" is seperated by 8 spaces, eg "GMN.... SPL.... "
         ptr += CHARS_PER_TURN;
 
         if(*ptr == 'G') {
@@ -269,22 +267,6 @@ static void playerLocation(GameView gv, char *pastPlays) {
 // Get the current location id of a given player
 LocationID getLocation(GameView currentView, PlayerID player)
 {
-    //if(currentView->currLocation[player] == UNKNOWN_LOCATION) {
-    //    return UNKNOWN_LOCATION;
-    //} 
-
-// Otherwise for a hunter it should be an integer in the interval [0..70]
-// For dracula it should return his location at the start of the current round
-// Possible values for this:
-//   in the interval [0...70] if Dracula was known to be in a city or sea
-//   CITY_UNKNOWN     if Dracula was in an unknown city
-//   SEA_UNKNOWN      if Dracula was in an unknown sea
-//   HIDE             if Dracula was known to have made a hide move
-//   DOUBLE_BACK_N    where N is [0...5], if Dracula was known to have
-//                    made a double back move N positions back in the trail
-//                    e.g. DOUBLE_BACK_1 is the last place place he visited
-//   TELEPORT         if Dracula apparated back to Castle Dracula
-//   LOCATION_UNKNOWN if the round number is 0
     return currentView->currLocation[player];
 }
 
@@ -341,37 +323,24 @@ static void lastSix(GameView currentView, char *pastPlays){
     } 
 }
 
-
 //// Functions that query the map to find information about connectivity
 
 // Returns an array of LocationIDs for all directly connected currLocation
-
-// connectedLocations() returns an array of LocationID that represent
-//   all locations that are connected to the given LocationID.
-// road, rail and sea are connections should only be considered
-//   if the road, rail, sea parameters are TRUE.
-// The size of the array is stored in the variable pointed to by numLocations
-// The array can be in any order but must contain unique entries
-// Your function must take into account the round and player id for rail travel
-// Your function must take into account that Dracula can't move to
-//   the hospital or travel by rail but need not take into account Dracula's trail
-// The destination 'from' should be included in the array
 LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
-    // to do
-    // start will be using getlocation for the player
-    // scan through populating numcurrLocation 
-    // can modify map
-    
+    // Notes:
+    //      - take in account round and player id for rail
+    //      - take into account trail for player
+    //      - drac needs finishing
     int *locs = malloc(100*sizeof(int));
 
     if (player == PLAYER_DRACULA) {
         // cant move to hospital, or travel by rail
     } else {
-        // scan map normally
         *numcurrLocation = connectedLocs(currentView->m,locs,from,road,rail,sea);
+        
     }
 
     return locs;
