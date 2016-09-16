@@ -1,5 +1,6 @@
 // GameView.c ... GameView ADT implementation
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <string.h>
@@ -24,6 +25,7 @@ struct gameView {
     int health[NUM_PLAYERS];
     int currLocation[NUM_PLAYERS];
     int location[NUM_PLAYERS][TRAIL_SIZE];
+    Map m;
 };    
 
 // Creates a new GameView to summarise the current state of the game
@@ -47,7 +49,8 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
 
     playerLocation(gv,pastPlays);
 
-    // to do once functions included
+    gv->m = newMap();
+
     return gv;
 }
      
@@ -78,6 +81,21 @@ static Round roundCalc(char *pastPlays){
 
 //scans through the last turn info and returns the next player that shud be playing
 static PlayerID getPlayer(char *pastPlays){
+/*    char *ptr = &pastPlays[strlen(pastPlays) - 1]; //sets the pointer at the end of the string
+    while(*ptr != ' '){
+        ptr--;
+    } //traverses te list backwards until it finds the 2nd last player
+    ptr++; 
+    PlayerID player;
+    switch(*ptr){
+        case 'G' : player = PLAYER_DR_SEWARD;
+        case 'S' : player = PLAYER_VAN_HELSING;
+        case 'H' : player = PLAYER_MINA_HARKER;
+        case 'M' : player = PLAYER_DRACULA;
+        case 'D' : player = PLAYER_LORD_GODALMING;
+    } //checks the last person that played and returns the next person that should be playing
+    return player; 
+    */
     if(strlen(pastPlays) == 0){
         return PLAYER_LORD_GODALMING;
     }
@@ -149,7 +167,6 @@ int getHealth(GameView currentView, PlayerID player)
 static void playerLocation(GameView gv, char *pastPlays) {
 
     char *ptr = pastPlays;
-    int i = 0;
 
     if (getRound(gv) == 0) {
 
@@ -161,69 +178,95 @@ static void playerLocation(GameView gv, char *pastPlays) {
         return;
     }
 
-    do {
+    while( (*ptr != '\0'  ||  *(&ptr[1]) == '\0') ) {
+
+        if(ptr != pastPlays){
+            ptr++; //moves ptr to start of next turn if ptr is not at the start
+        }
+
         if(*ptr == 'G') {
             char *abrv = malloc(3*sizeof(char));
-            abrv[0] = *(ptr += 1);
-            abrv[1] = *(ptr += 2);
+            abrv[0] = *(ptr+1);
+            abrv[1] = *(ptr+2);
             abrv[2] = '\0';
-
+            
             gv->currLocation[PLAYER_LORD_GODALMING] = abbrevToID(abrv);
-            i++;
             free(abrv);
 
         } else if(*ptr == 'S') {
             char *abrv = malloc(3*sizeof(char));
-            abrv[0] = *(ptr += 1);
-            abrv[1] = *(ptr += 2);
+            abrv[0] = *(ptr+1);
+            abrv[1] = *(ptr+2);
             abrv[2] = '\0';
 
             gv->currLocation[PLAYER_DR_SEWARD] = abbrevToID(abrv);
-            i++;
             free(abrv);
 
-        } else if(*ptr == 'V') {
+        } else if(*ptr == 'H') {
             char *abrv = malloc(3*sizeof(char));
-            abrv[0] = *(ptr += 1);
-            abrv[1] = *(ptr += 2);
+            abrv[0] = *(ptr+1);
+            abrv[1] = *(ptr+2);
             abrv[2] = '\0';
 
             gv->currLocation[PLAYER_VAN_HELSING] = abbrevToID(abrv);
-            i++;
             free(abrv);
 
         } else if(*ptr == 'M') {
             char *abrv = malloc(3*sizeof(char));
-            abrv[0] = *(ptr += 1);
-            abrv[1] = *(ptr += 2);
+            abrv[0] = *(ptr+1);
+            abrv[1] = *(ptr+2);
             abrv[2] = '\0';
-            
+
             gv->currLocation[PLAYER_MINA_HARKER] = abbrevToID(abrv);
-            i++;
             free(abrv);
 
         } else if(*ptr == 'D') {
             char *abrv = malloc(3*sizeof(char));
-            abrv[0] = *(ptr += 1);
-            abrv[1] = *(ptr += 2);
+            abrv[0] = *(ptr+1);
+            abrv[1] = *(ptr+2);
             abrv[2] = '\0';
 
-            gv->currLocation[PLAYER_DRACULA] = abbrevToID(abrv);
-            i++;
+            char *cityCheck = "C?";
+            char *seaCheck = "S?";
+            // check for teleport
+
+            if(strcmp(abrv, cityCheck) == 0 ) {
+                gv->currLocation[PLAYER_DRACULA] = CITY_UNKNOWN;
+            } else if(strcmp(abrv, seaCheck) == 0 ) {
+                gv->currLocation[PLAYER_DRACULA] = SEA_UNKNOWN;
+            } else if(abrv[0] == 'D') {
+                // double back determined by abrv[1]
+                if (abrv[1] == '1') {
+                    gv->currLocation[PLAYER_DRACULA] = DOUBLE_BACK_1;
+                } else if (abrv[1] == '2') {
+                    gv->currLocation[PLAYER_DRACULA] = DOUBLE_BACK_2;
+                } else if (abrv[1] == '3') {
+                    gv->currLocation[PLAYER_DRACULA] = DOUBLE_BACK_3;
+                } else if (abrv[1] == '4') {
+                    gv->currLocation[PLAYER_DRACULA] = DOUBLE_BACK_4;
+                } else if (abrv[1] == '5') {
+                    gv->currLocation[PLAYER_DRACULA] = DOUBLE_BACK_5;
+                }
+            } else {
+                gv->currLocation[PLAYER_DRACULA] = abbrevToID(abrv);
+            }
             free(abrv);
         }
         // each player "action" is seperated by 8 spaces, eg "GMN.... SPL.... "
-        ptr += 8;
+        ptr += CHARS_PER_TURN;
 
-    } while( (*ptr != '\0' || *(&ptr[1]) == '\0') || *ptr != 'G' );
+        if(*ptr == 'G') {
+            break;
+        }
+    }
 }
 
 // Get the current location id of a given player
 LocationID getLocation(GameView currentView, PlayerID player)
 {
-    if(currentView->currLocation[player] == UNKNOWN_LOCATION) {
-        return UNKNOWN_LOCATION;
-    } 
+    //if(currentView->currLocation[player] == UNKNOWN_LOCATION) {
+    //    return UNKNOWN_LOCATION;
+    //} 
 
 // Otherwise for a hunter it should be an integer in the interval [0..70]
 // For dracula it should return his location at the start of the current round
@@ -237,154 +280,94 @@ LocationID getLocation(GameView currentView, PlayerID player)
 //                    e.g. DOUBLE_BACK_1 is the last place place he visited
 //   TELEPORT         if Dracula apparated back to Castle Dracula
 //   LOCATION_UNKNOWN if the round number is 0
-    
     return currentView->currLocation[player];
 }
 
 //// Functions that return information about the history of the game
 
 // Fills the trail array with the location ids of the last 6 turns
-
 void getHistory(GameView currentView, PlayerID player,
                             LocationID trail[TRAIL_SIZE])
-
 {
-/*	trail[0]=UNKNOWN_LOCATION;
-	trail[1]=UNKNOWN_LOCATION;
-	trail[2]=UNKNOWN_LOCATION;
-	trail[3]=UNKNOWN_LOCATION;
-	trail[4]=UNKNOWN_LOCATION;
-	trail[5]=UNKNOWN_LOCATION;
-*/
-	int i = 0;
-	while(i<TRAIL_SIZE){
-		trail[i]=currentView->location[player][i];
-		i++;
-	}
+    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
 }
 
-
 //fills array recording the last 6 location ids of all players
-
 static void lastSix(GameView currentView, char *pastPlays){
     //if everyone has taken at least 6 turns
-	//NOT RIGHT
     if((currentView->currRound)>=6){
-        //goes to the 6th last round
+    //goes to the 6th last round
         int index = ((currentView->currRound)-6)*8 + 1;
         PlayerID i = 0;
-		while(i<NUM_PLAYERS){
-        	int turn = 0;
-			while(turn<6){
-				if(pastPlays[index]=='C' && pastPlays[index+1]=='?'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = CITY_UNKNOWN;
-				} else if(pastPlays[index]=='S' && pastPlays[index+1]=='?'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = SEA_UNKNOWN;
-				} else if(pastPlays[index]=='H' && pastPlays[index+1]=='I'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = HIDE;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='1'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = DOUBLE_BACK_1;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='2'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = DOUBLE_BACK_2;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='3'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = DOUBLE_BACK_3;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='4'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = DOUBLE_BACK_4;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='5'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = DOUBLE_BACK_5;
-				} else if(pastPlays[index]=='T' && pastPlays[index+1]=='P'){
-					currentView->location[i][TRAIL_SIZE-1-turn] = TELEPORT;
-				} else {
-					currentView->location[i][TRAIL_SIZE-1-turn]=abbrevToID(&pastPlays[index]);
-				}
-				turn++;
-				index+=40;
-			}
-			i++;
-			index = ((currentView->currRound)-6)*8 + 1 + 8*i;
-		}
-	} else {
-		int index = 1;
-		PlayerID i = 0;
+        while(i<NUM_PLAYERS){
+            int turn = 0;
+            while(turn<6){
+                currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
+                turn++;
+                index+=40;
+            }
+            i++;
+            index = ((currentView->currRound)-6)*8 + 1 + 8*i;
+        }
+    } else {
+        int index = 1;
+        PlayerID i = 0;
         while(i<currentView->currPlayer){
             int turn = 0;
-			while(turn<((currentView->currRound)+1)){
-				if(pastPlays[index]=='C' && pastPlays[index+1]=='?'){
-					currentView->location[i][currentView->currRound-turn-1] = CITY_UNKNOWN;
-				} else if(pastPlays[index]=='S' && pastPlays[index+1]=='?'){
-					currentView->location[i][currentView->currRound-turn-1] = SEA_UNKNOWN;
-				} else if(pastPlays[index]=='H' && pastPlays[index+1]=='I'){
-					currentView->location[i][currentView->currRound-turn-1] = HIDE;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='1'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_1;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='2'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_2;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='3'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_3;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='4'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_4;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='5'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_5;
-				} else if(pastPlays[index]=='T' && pastPlays[index+1]=='P'){
-					currentView->location[i][currentView->currRound-turn-1] = TELEPORT;
-				} else {
-					currentView->location[i][currentView->currRound-turn-1]=abbrevToID(&pastPlays[index]);
-				}
+            while(turn<((currentView->currRound)+1)){
+                currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
                 turn++;
                 index+=40;
             }
             i++;
             index = 1 + 8*i;
         }
+
         while(i<NUM_PLAYERS){
             int turn = 0;
-			while(turn<(currentView->currRound)){
-				if(pastPlays[index]=='C' && pastPlays[index+1]=='?'){
-					currentView->location[i][currentView->currRound-turn-1] = CITY_UNKNOWN;
-				} else if(pastPlays[index]=='S' && pastPlays[index+1]=='?'){
-					currentView->location[i][currentView->currRound-turn-1] = SEA_UNKNOWN;
-				} else if(pastPlays[index]=='H' && pastPlays[index+1]=='I'){
-					currentView->location[i][currentView->currRound-turn-1] = HIDE;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='1'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_1;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='2'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_2;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='3'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_3;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='4'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_4;
-				} else if(pastPlays[index]=='D' && pastPlays[index+1]=='5'){
-					currentView->location[i][currentView->currRound-turn-1] = DOUBLE_BACK_5;
-				} else if(pastPlays[index]=='T' && pastPlays[index+1]=='P'){
-					currentView->location[i][currentView->currRound-turn-1] = TELEPORT;
-				} else {
-					currentView->location[i][currentView->currRound-turn-1]=abbrevToID(&pastPlays[index]);
-				}
-				turn++;
-				index+=40;
+            while(turn<(currentView->currRound)){
+                currentView->location[i][turn]=abbrevToID(&pastPlays[index]);
+                turn++;
+                index+=40;
             }
             i++;
             index = 1 + 8*i;
         }
-    }
+    } 
 }
-
-
 
 
 //// Functions that query the map to find information about connectivity
 
 // Returns an array of LocationIDs for all directly connected currLocation
 
+// connectedLocations() returns an array of LocationID that represent
+//   all locations that are connected to the given LocationID.
+// road, rail and sea are connections should only be considered
+//   if the road, rail, sea parameters are TRUE.
+// The size of the array is stored in the variable pointed to by numLocations
+// The array can be in any order but must contain unique entries
+// Your function must take into account the round and player id for rail travel
+// Your function must take into account that Dracula can't move to
+//   the hospital or travel by rail but need not take into account Dracula's trail
+// The destination 'from' should be included in the array
 LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
-    
     // to do
     // start will be using getlocation for the player
     // scan through populating numcurrLocation 
+    // can modify map
 
+    int *locs = malloc( (*numcurrLocation)*sizeof(int));
 
-    return NULL;
+    if (player == PLAYER_DRACULA) {
+        // cant move to hospital, or travel by rail
+    } else {
+        // scan map normally
+        connectedLocs(currentView->m,locs,from);
+    }
+
+    return locs;
 }
