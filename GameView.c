@@ -40,7 +40,7 @@ GameView newGameView(char *pastPlays, PlayerMessage messages[])
     while(i<NUM_PLAYERS){ 
         int j = 0;
         while(j<TRAIL_SIZE){
-            gv->location[i][j]=-1;
+            gv->location[i][j]=UNKNOWN_LOCATION;
             j++;
         }
         i++;
@@ -81,25 +81,10 @@ static Round roundCalc(char *pastPlays){
 
 //scans through the last turn info and returns the next player that shud be playing
 static PlayerID getPlayer(char *pastPlays){
-/*    char *ptr = &pastPlays[strlen(pastPlays) - 1]; //sets the pointer at the end of the string
-    while(*ptr != ' '){
-        ptr--;
-    } //traverses te list backwards until it finds the 2nd last player
-    ptr++; 
-    PlayerID player;
-    switch(*ptr){
-        case 'G' : player = PLAYER_DR_SEWARD;
-        case 'S' : player = PLAYER_VAN_HELSING;
-        case 'H' : player = PLAYER_MINA_HARKER;
-        case 'M' : player = PLAYER_DRACULA;
-        case 'D' : player = PLAYER_LORD_GODALMING;
-    } //checks the last person that played and returns the next person that should be playing
-    return player; 
-    */
     if(strlen(pastPlays) == 0){
         return PLAYER_LORD_GODALMING;
     }
-    char ptr = pastPlays[strlen(pastPlays) - 7];
+    char ptr = pastPlays[strlen(pastPlays) - CHARS_PER_TURN];
     PlayerID player;
     switch(ptr){
         case 'G' : player = PLAYER_DR_SEWARD; break;
@@ -271,51 +256,30 @@ LocationID getLocation(GameView currentView, PlayerID player)
 }
 
 //// Functions that return information about the history of the game
-
 // Fills the trail array with the location ids of the last 6 turns
-
 void getHistory(GameView currentView, PlayerID player,
-
                             LocationID trail[TRAIL_SIZE])
-
 {
-/*	trail[0]=UNKNOWN_LOCATION;
-	trail[1]=UNKNOWN_LOCATION;
-	trail[2]=UNKNOWN_LOCATION;
-	trail[3]=UNKNOWN_LOCATION;
-	trail[4]=UNKNOWN_LOCATION;
-	trail[5]=UNKNOWN_LOCATION;
-*/
 	int i = 0;
-
 	while(i<TRAIL_SIZE){
-
 		trail[i]=currentView->location[player][i];
-
 		i++;
-
 	}
-
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-
 }
 
 
-
 //fills array recording the last 6 location ids of all players
-
 static void lastSix(GameView currentView, char *pastPlays){
-    printf("round be 1 but is %d and %d\n", roundCalc(pastPlays), currentView->currRound);
-    //if everyone has taken at least 6 turns
-    printf("%d\n",currentView->currRound);
+    //if at least 6 rounds
     if((currentView->currRound)>=6){
         //goes to the 6th last round
         int index = ((currentView->currRound)-6)*SAME_PLACE_NEXT_TURN*NUM_PLAYERS + 1;
         PlayerID i = 0;
-		printf("in");
+        //if some players has taken more turns than others
+        //for which, go to next turn (since they have one more turn) 
 		while(i<currentView->currPlayer){
         	int turn = 0;
-        	index-=SAME_PLACE_NEXT_TURN*NUM_PLAYERS;
+        	index+=SAME_PLACE_NEXT_TURN*NUM_PLAYERS;
 			while(turn<TRAIL_SIZE){
 				if(pastPlays[index]=='C' && pastPlays[index+1]=='?'){
 					currentView->location[i][TRAIL_SIZE-1-turn] = CITY_UNKNOWN;
@@ -342,8 +306,10 @@ static void lastSix(GameView currentView, char *pastPlays){
 				index+=SAME_PLACE_NEXT_TURN*NUM_PLAYERS;
 			}
 			i++;
+			//reset index for next playerID
 			index = ((currentView->currRound)-6)*SAME_PLACE_NEXT_TURN*NUM_PLAYERS + 1 + 8*i;
 		}
+		//for players that have as many turns as the current round number
 		while(i<NUM_PLAYERS){
         	int turn = 0;
 			while(turn<TRAIL_SIZE){
@@ -375,7 +341,7 @@ static void lastSix(GameView currentView, char *pastPlays){
 			index = ((currentView->currRound)-6)*SAME_PLACE_NEXT_TURN*NUM_PLAYERS + 1 + 8*i;
 		}
 	} else {
-		printf("out\n");
+		//when round number<6, so less than 6 moves have been made for more than one player
 		int index = 1;
 		PlayerID i = 0;
         while(i<currentView->currPlayer){
