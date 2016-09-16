@@ -71,7 +71,7 @@ static Round roundCalc(char *pastPlays){
             ptr++; //moves ptr to start of next turn if ptr is not at the start
         } 
 
-        if(*ptr == 'G'){ //evrytime "G" is  seen, it signifies a new round 
+        if(*ptr == 'D'){ //evrytime "G" is  seen, it signifies a new round 
             round++;
         }
         ptr+=CHARS_PER_TURN; //increments ptr to space b4 next turn's info
