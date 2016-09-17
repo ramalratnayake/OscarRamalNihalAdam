@@ -29,7 +29,6 @@ void disposeHunterView(HunterView toBeDeleted)
     free( toBeDeleted );
 }
 
-
 //// Functions to return simple information about the current state of the game
 
 // Get the current round
@@ -68,7 +67,6 @@ LocationID whereIs(HunterView currentView, PlayerID player)
 void giveMeTheTrail(HunterView currentView, PlayerID player,
                             LocationID trail[TRAIL_SIZE])
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     // use gameviews history
     getHistory(currentView->g,player,trail);
 }
