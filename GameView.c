@@ -159,7 +159,6 @@ static void playerLocation(GameView gv, char *pastPlays) {
         gv->currLocation[PLAYER_VAN_HELSING] = UNKNOWN_LOCATION;
         gv->currLocation[PLAYER_MINA_HARKER] = UNKNOWN_LOCATION;
         gv->currLocation[PLAYER_DRACULA] = UNKNOWN_LOCATION;
-        return;
     }
 
     while( (*ptr != '\0'  ||  *(&ptr[1]) == '\0') ) {
