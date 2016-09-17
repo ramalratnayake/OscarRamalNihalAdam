@@ -6,14 +6,67 @@
 #include "Game.h"
 #include "GameView.h"
 #include "DracView.h"
-// #include "Map.h" ... if you decide to use the Map ADT
-     
+#include "Map.h" ... if you decide to use the Map ADT
+static void calcTraps(char *pastPlays, DracView dv);     
 struct dracView {
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     GameView g;
+    int minions[NUM_MAP_LOCATIONS][NUM_TRAPS];
 };
      
+static void calcTraps(char *pastPlays, DracView dv){
+    char *ptr = pastPlays;
+    int i=0;
+    while(i<NUM_MAP_LOCATIONS){
+        dv->minions[i][TRAPS] = 0;
+        dv->minions[i][VAMPS] = 0;
+        i++;
+    }
+    if (giveMeTheRound(dv) == 0) {
+        return;
+    } //Dracula will not have placed any traps yet
 
+    
+    while( (*ptr != '\0'  ||  *(&ptr[1]) == '\0') ) {
+        if(ptr != pastPlays){
+            ptr++; //moves ptr to start of next turn if ptr is not at the start
+        }
+        char *abrv = malloc(3*sizeof(char));
+        abrv[0] = *(ptr+1);
+        abrv[1] = *(ptr+2);
+        abrv[2] = '\0';
+        
+        if(*ptr == 'D') {
+            if(*(ptr+3) == 'T'){
+                dv->minions[abbrevToID(abrv)][TRAPS]++;
+            } else if(*(ptr+4) == 'V'){    
+                dv->minions[abbrevToID(abrv)][VAMPS]++;
+            } else if(*(ptr+5) == 'V'){ //if vampires mature
+                LocationID trail[TRAIL_SIZE];
+                giveMeTheTrail(dv, PLAYER_DRACULA, trail); //to find out the location of dracula 6 moves ago
+                dv->minions[trail[TRAIL_SIZE-1]][VAMPS]--; //which will give the location of the placed vampire
+            } else if(*(ptr+5) == 'M'){ //if traps fall off trail
+                LocationID trail[TRAIL_SIZE];
+                giveMeTheTrail(dv, PLAYER_DRACULA, trail); 
+                dv->minions[trail[TRAIL_SIZE-1]][TRAPS]--; 
+            }
+         }
+        
+        else{ //hunters encountering the traps
+            int i = 0;
+            while (i<4){ //4 possible locations for encounters
+                if(*(ptr+(2+i)) == 'T'){
+                    dv->minions[abbrevToID(abrv)][TRAPS]--;
+                } else if(*(ptr+(2+i)) == 'V'){
+                    dv->minions[abbrevToID(abrv)][VAMPS]--;
+                }
+                i++;
+            }
+        }
+        free(abrv);
+        ptr += CHARS_PER_TURN;
+    }                
+}
 // Creates a new DracView to summarise the current state of the game
 DracView newDracView(char *pastPlays, PlayerMessage messages[])
 {
@@ -69,7 +122,8 @@ void lastMove(DracView currentView, PlayerID player,
 void whatsThere(DracView currentView, LocationID where,
                          int *numTraps, int *numVamps)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
+    *numTraps = currentView->minions[where][TRAPS];
+    *numVamps = currentView->minions[where][VAMPS];
     return;
 }
 
