@@ -1,3 +1,4 @@
+
 // DracView.c ... DracView ADT implementation
 
 #include <stdlib.h>
@@ -6,7 +7,13 @@
 #include "Game.h"
 #include "GameView.h"
 #include "DracView.h"
-#include "Map.h" ... if you decide to use the Map ADT
+#include "Map.h" 
+
+#define NUM_TRAPS 2
+#define TRAPS 0
+#define VAMPS 1
+#define CHARS_PER_TURN 7
+
 static void calcTraps(char *pastPlays, DracView dv);     
 struct dracView {
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
@@ -14,6 +21,26 @@ struct dracView {
     int minions[NUM_MAP_LOCATIONS][NUM_TRAPS];
 };
      
+               
+
+// Creates a new DracView to summarise the current state of the game
+DracView newDracView(char *pastPlays, PlayerMessage messages[])
+{
+    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
+    DracView dracView = malloc(sizeof(struct dracView));
+    dracView->g = newGameView(pastPlays,messages);
+    calcTraps(pastPlays, dracView);
+    return dracView;
+}
+     
+     
+// Frees all memory previously allocated for the DracView toBeDeleted
+void disposeDracView(DracView toBeDeleted)
+{
+    //COMPLETE THIS IMPLEMENTATION
+    free( toBeDeleted );
+}
+
 static void calcTraps(char *pastPlays, DracView dv){
     char *ptr = pastPlays;
     int i=0;
@@ -65,26 +92,8 @@ static void calcTraps(char *pastPlays, DracView dv){
         }
         free(abrv);
         ptr += CHARS_PER_TURN;
-    }                
+    } 
 }
-// Creates a new DracView to summarise the current state of the game
-DracView newDracView(char *pastPlays, PlayerMessage messages[])
-{
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    DracView dracView = malloc(sizeof(struct dracView));
-    dracView->g = newGameView(pastPlays,messages);
-    return dracView;
-}
-     
-     
-// Frees all memory previously allocated for the DracView toBeDeleted
-void disposeDracView(DracView toBeDeleted)
-{
-    //COMPLETE THIS IMPLEMENTATION
-    free( toBeDeleted );
-}
-
-
 //// Functions to return simple information about the current state of the game
 
 // Get the current round
@@ -141,12 +150,11 @@ void giveMeTheTrail(DracView currentView, PlayerID player,
 // What are my (Dracula's) possible next moves (locations)
 LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int sea)
 {
-/*	//need to modify connectedLocations, as it requires the input of (int rail) but this function doesnt get 
+	//need to modify connectedLocations, as it requires the input of (int rail) but this function doesnt get 
 	//in int rail, as Dracula cannot move via rail
-    PlayerID player = whoAmI(currentView);
-    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
-										player, getRound(currentView->g) ,road, rail, sea);
-*/
+    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,PLAYER_DRACULA),
+										PLAYER_DRACULA, getRound(currentView->g) ,road, FALSE, sea);
+
 	return NULL;
 }
 
@@ -154,6 +162,15 @@ LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int s
 LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
                            PlayerID player, int road, int rail, int sea)
 {
-    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
-    									player, getRound(currentView->g) , road, rail, sea);
+    if(player != PLAYER_DRACULA){
+        return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
+        									player, getRound(currentView->g) , road, rail, sea);
+    }else{
+        return whereCanIgo(currentView, numLocations, road, sea);
+    }   
+    
 }
+
+
+
+
