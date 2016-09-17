@@ -251,7 +251,8 @@ static void playerLocation(GameView gv, char *pastPlays) {
 // Get the current location id of a given player
 LocationID getLocation(GameView currentView, PlayerID player)
 {
-    return currentView->currLocation[player];
+    return currentView->location[player][0];
+//    return currentView->currLocation[player];
 }
 
 //// Functions that return information about the history of the game
