@@ -10,7 +10,7 @@
      
 struct dracView {
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    int hello;
+    GameView g;
 };
      
 
@@ -19,7 +19,7 @@ DracView newDracView(char *pastPlays, PlayerMessage messages[])
 {
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     DracView dracView = malloc(sizeof(struct dracView));
-    dracView->hello = 42;
+    dracView->g = newGameView(pastPlays,messages);
     return dracView;
 }
      
@@ -37,36 +37,31 @@ void disposeDracView(DracView toBeDeleted)
 // Get the current round
 Round giveMeTheRound(DracView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return getRound(currentView->g);
 }
 
 // Get the current score
 int giveMeTheScore(DracView currentView)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return getScore(currentView->g);
 }
 
 // Get the current health points for a given player
 int howHealthyIs(DracView currentView, PlayerID player)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return getHealth(currentView->g,player);
 }
 
 // Get the current location id of a given player
 LocationID whereIs(DracView currentView, PlayerID player)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return 0;
+    return getLocation(currentView->g,player);
 }
 
 // Get the most recent move of a given player
 void lastMove(DracView currentView, PlayerID player,
                  LocationID *start, LocationID *end)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     return;
 }
 
@@ -84,7 +79,7 @@ void whatsThere(DracView currentView, LocationID where,
 void giveMeTheTrail(DracView currentView, PlayerID player,
                             LocationID trail[TRAIL_SIZE])
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
+    getHistory(currentView->g,player,trail);
 }
 
 //// Functions that query the map to find information about connectivity
@@ -92,14 +87,19 @@ void giveMeTheTrail(DracView currentView, PlayerID player,
 // What are my (Dracula's) possible next moves (locations)
 LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return NULL;
+/*	//need to modify connectedLocations, as it requires the input of (int rail) but this function doesnt get 
+	//in int rail, as Dracula cannot move via rail
+    PlayerID player = whoAmI(currentView);
+    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
+										player, getRound(currentView->g) ,road, rail, sea);
+*/
+	return NULL;
 }
 
 // What are the specified player's next possible moves
 LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
                            PlayerID player, int road, int rail, int sea)
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
-    return NULL;
+    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
+    									player, getRound(currentView->g) , road, rail, sea);
 }
