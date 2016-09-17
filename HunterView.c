@@ -70,6 +70,7 @@ void giveMeTheTrail(HunterView currentView, PlayerID player,
 {
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     // use gameviews history
+    getHistory(currentView->g,player,trail);
 }
 
 //// Functions that query the map to find information about connectivity
