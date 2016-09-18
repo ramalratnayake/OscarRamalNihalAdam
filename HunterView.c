@@ -1,5 +1,5 @@
 // HunterView.c ... HunterView ADT implementation
-
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include "Globals.h"
@@ -78,14 +78,19 @@ LocationID *whereCanIgo(HunterView currentView, int *numLocations,
                         int road, int rail, int sea)
 {
     PlayerID player = whoAmI(currentView);
-    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
-                              player, getRound(currentView->g) ,road, rail, sea);
+
+
+    return connectedLocations(currentView->g,numLocations, whereIs(currentView, player),
+                              player, giveMeTheRound(currentView) ,road, rail, sea);
 }
 
 // What are the specified player's next possible moves
 LocationID *whereCanTheyGo(HunterView currentView, int *numLocations,
                            PlayerID player, int road, int rail, int sea)
 {
-    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
-                              player, getRound(currentView->g) , road, rail, sea);
+
+
+
+    return connectedLocations(currentView->g,numLocations, whereIs(currentView, player),
+                              player, giveMeTheRound(currentView) , road, rail, sea);
 }
