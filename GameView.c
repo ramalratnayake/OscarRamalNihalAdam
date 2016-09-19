@@ -420,14 +420,14 @@ LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
     //      - take in account round and player id for rail
     //      - take into account trail for player
     //      - drac needs finishing
+
+    // drac is handled externally 
+
+
     int *locs = malloc(100*sizeof(int));
 
-    if (player == PLAYER_DRACULA) {
-        // cant move to hospital, or travel by rail
-    } else {
-        *numcurrLocation = connectedLocs(currentView->m,locs,from,road,rail,sea);
+    *numcurrLocation = connectedLocs(currentView->m,locs,from, player , round,road,rail,sea);
         
-    }
 
     return locs;
 }
