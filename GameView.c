@@ -109,7 +109,9 @@ static int calcScore(char *pastPlays){
 
         if(*ptr == 'D'){  //dracula moved
             score -= SCORE_LOSS_DRACULA_TURN; 
-        } else if(*ptr == 'D' && *act == 'V'){  //a vampire matured
+        } 
+        
+        if(*ptr == 'D' && *act == 'V'){  //a vampire matured
             score -= SCORE_LOSS_VAMPIRE_MATURES;
         } else if (*ptr != 'D' && *loc == 'J'){  //a hunter is teleported to hospital
             score -= SCORE_LOSS_HUNTER_HOSPITAL;
