@@ -145,29 +145,62 @@ static int notHere(int *locs, int x, int size) {
    return 1;
 }
 
-int connectedLocs(Map g ,int *locs, int from, int road, int rail, int sea) {
+static int connectByRail(Map g, int *locs, int from, int count, int check) {
+
+   VList curr = g->connections[from];
+
+   while (curr != NULL) {
+      if ( notHere(locs, curr->v, count) != 0  && curr->type == RAIL) {
+         locs[count] = curr->v;
+         count++;
+
+         if (check == 1) {
+            count = connectByRail(g,locs,curr->v,count,0); 
+         }
+      }
+      curr = curr->next;
+   }
+   return count;
+}
+
+
+int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, int rail, int sea) {
    VList curr = g->connections[from];
    int count = 0; 
    locs[count++] = from;
+
    while (curr != NULL){
       
       if( notHere(locs, curr->v, count) != 0) {      
-         if(road == 1) {
-            if ( curr->type == ROAD ) {
+         if(road == 1 && (idToType(curr->v) == LAND || curr->type == ROAD ) ) {
+            locs[count] = curr->v;
+            count++;
+         }
+
+         if(sea == 1 && curr->type == BOAT ) {
+            if ( notHere(locs, curr->v, count) != 0 ) {
                locs[count] = curr->v;
-               count++;
+               count++;   
             }
          }
+
          if(rail == 1) {
+
+            int sum = rounds + player;
+
             if ( curr->type == RAIL ) {
-               locs[count] = curr->v;
-               count++;
-            }
-         }
-         if(sea == 1) {
-            if ( curr->type == BOAT ) {
-               locs[count] = curr->v;
-               count++;
+               if (sum%4 == 0) {
+                  //nothing
+               } else if (sum%4 == 1) {
+                  if ( notHere(locs, curr->v, count) != 0 ) {
+                     locs[count] = curr->v;
+                     count++;   
+                  }
+               } else if (sum%4 == 2) {
+                  count = connectByRail(g,locs,curr->v,count,0);
+               } else if (sum%4 == 3) {
+                  count = connectByRail(g,locs,curr->v,count,1);
+               }     
             }
          }
       }
