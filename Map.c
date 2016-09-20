@@ -7,6 +7,7 @@
 #include <stdlib.h>
 #include "Map.h"
 #include "Places.h"
+#include "Globals.h"
 
 typedef struct vNode *VList;
 
@@ -164,7 +165,7 @@ static int connectByRail(Map g, int *locs, int from, int count, int check) {
 }
 
 
-int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, int rail, int sea) {
+int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, int rail, int sea, int *trail) {
    VList curr = g->connections[from];
    int count = 0; 
    locs[count++] = from;
@@ -173,17 +174,46 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
       
       if( notHere(locs, curr->v, count) != 0) {      
          if(road == 1 && (idToType(curr->v) == LAND || curr->type == ROAD ) ) {
-            locs[count] = curr->v;
-            count++;
-         }
+            
+            if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
+               // exclude all locations in trail, except for curr loc
+               int i = 1;
+               while (i < TRAIL_SIZE) {
+                  if (curr->v != trail[i]) {
+                     locs[count] = curr->v;
+                     count++;      
+                  }
+                  i++;
+               }
 
-         if(sea == 1 && curr->type == BOAT ) {
-            if ( notHere(locs, curr->v, count) != 0 ) {
+            } else {
                locs[count] = curr->v;
-               count++;   
+               count++;
             }
          }
 
+         if(sea == 1 && curr->type == BOAT ) {
+            
+            if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
+               // exclude all locations in trail, expect current loc
+               int i = 1;
+               while (i < TRAIL_SIZE) {
+                  if (curr->v != trail[i]) {
+                     locs[count] = curr->v;
+                     count++;      
+                  }
+                  i++;
+               }
+
+            } else {
+               if ( notHere(locs, curr->v, count) != 0 ) {
+                  locs[count] = curr->v;
+                  count++;   
+               }
+            }
+         }
+
+         // drac never travels by rail
          if(rail == 1) {
 
             int sum = rounds + player;

@@ -20,6 +20,6 @@ void disposeMap(Map g);
 void showMap(Map g); 
 int  numV(Map g);
 int  numE(Map g, TransportID t);
-int  connectedLocs(Map g,int *locs, int from, int player, int rounds, int road, int rail, int sea);
+int  connectedLocs(Map g,int *locs, int from, int player, int rounds, int road, int rail, int sea, int *trail);
 
 #endif
