@@ -21,6 +21,10 @@ struct dracView {
     int minions[NUM_MAP_LOCATIONS][NUM_TRAPS];
 };
      
+     
+// Notes:
+//      - traps and minions needs fixing
+//      - drac location function needs working specifically handling when drac makes special moves
                
 
 // Creates a new DracView to summarise the current state of the game
@@ -114,17 +118,51 @@ int howHealthyIs(DracView currentView, PlayerID player)
     return getHealth(currentView->g,player);
 }
 
-// Get the current location id of a given player
 LocationID whereIs(DracView currentView, PlayerID player)
 {
-    return getLocation(currentView->g,player);
+    // hunters have to infer location of dracula when he makes a double back etc
+    // but drac must know where he is 
+
+    int location = getLocation(currentView->g,player);
+
+    if (player == PLAYER_DRACULA) {
+        // check teleport, double back, hide
+        // more complex decisions can be handled by AIs,
+        // rule breaking etc handled by jas's engine im guessing
+
+        int *t = malloc(TRAIL_SIZE*sizeof(int));
+
+        giveMeTheTrail(currentView,player,t);
+
+        if (location == TELEPORT) {
+            location = CASTLE_DRACULA;
+        } else if (location == DOUBLE_BACK_1) {
+            location = t[1];
+        } else if (location == DOUBLE_BACK_2) {
+            location = t[2];
+        } else if (location == DOUBLE_BACK_3) {
+            location = t[3];
+        } else if (location == DOUBLE_BACK_4) {
+            location = t[4];
+        } else if (location == DOUBLE_BACK_5) {
+            location = t[5];
+        }
+    }
+
+    return location;
 }
 
 // Get the most recent move of a given player
 void lastMove(DracView currentView, PlayerID player,
                  LocationID *start, LocationID *end)
 {
-    return;
+
+    *end = getLocation(currentView->g,player);
+
+    int *t = malloc(TRAIL_SIZE *sizeof(int));
+    getHistory(currentView->g,player,t);
+    
+    *start = t[1];
 }
 
 // Find out what minions are placed at the specified location
@@ -150,12 +188,10 @@ void giveMeTheTrail(DracView currentView, PlayerID player,
 // What are my (Dracula's) possible next moves (locations)
 LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int sea)
 {
-	//need to modify connectedLocations, as it requires the input of (int rail) but this function doesnt get 
-	//in int rail, as Dracula cannot move via rail
-    return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,PLAYER_DRACULA),
-										PLAYER_DRACULA, getRound(currentView->g) ,road, FALSE, sea);
-
-	return NULL;
+    //need to modify connectedLocations, as it requires the input of (int rail) but this function doesnt get 
+    //in int rail, as Dracula cannot move via rail
+    return connectedLocations(currentView->g,numLocations, whereIs(currentView,PLAYER_DRACULA),
+                                        PLAYER_DRACULA, giveMeTheRound(currentView) ,road, FALSE, sea);
 }
 
 // What are the specified player's next possible moves
@@ -163,13 +199,13 @@ LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
                            PlayerID player, int road, int rail, int sea)
 {
     if(player != PLAYER_DRACULA){
-        return connectedLocations(currentView->g,numLocations, getLocation(currentView->g,player),
-        									player, getRound(currentView->g) , road, rail, sea);
+        return connectedLocations(currentView->g,numLocations, whereIs(currentView,player),
+                                            player, giveMeTheRound(currentView) , road, rail, sea);
     }else{
         return whereCanIgo(currentView, numLocations, road, sea);
-    }   
-    
+    } 
 }
+
 
 
 
