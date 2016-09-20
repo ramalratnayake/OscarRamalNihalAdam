@@ -442,3 +442,4 @@ LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
 
     return locs;
 }
+
