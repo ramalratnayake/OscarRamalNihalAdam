@@ -11,6 +11,8 @@
 
 #define CHARS_PER_TURN 7
 #define SAME_PLACE_NEXT_TURN 8
+#define MAX_CONNECTIONS 100
+
 static Round roundCalc(char *pastPlays);  
 static PlayerID getPlayer(char *pastPlays);
 static int calcScore(char *pastPlays);
@@ -416,18 +418,27 @@ LocationID *connectedLocations(GameView currentView, int *numcurrLocation,
                                LocationID from, PlayerID player, Round round,
                                int road, int rail, int sea)
 {
-    // Notes:
-    //      - take in account round and player id for rail
-    //      - take into account trail for player
-    //      - drac needs finishing
+    LocationID *locs = malloc( MAX_CONNECTIONS *sizeof(int));
 
-    // drac is handled externally 
-
-
-    int *locs = malloc(100*sizeof(int));
-
-    *numcurrLocation = connectedLocs(currentView->m,locs,from, player , round,road,rail,sea);
+    if (player == PLAYER_DRACULA) {
+        // cant travel by rail
+        // exclude all locations in his trail expect curr
+        // exclude hospital
+        LocationID *dracTrail = malloc(TRAIL_SIZE*sizeof(int));
         
+        int i = 0;
+        while(i < TRAIL_SIZE) {
+            dracTrail[i] = currentView->trail[PLAYER_DRACULA][i];
+            i++;
+        }
+
+        *numcurrLocation = connectedLocs(currentView->m,locs,from,player,round,road,0,sea,dracTrail);
+
+        free(dracTrail);
+
+    } else {
+        *numcurrLocation = connectedLocs(currentView->m,locs,from,player,round,road,rail,sea,NULL);
+    }
 
     return locs;
 }
