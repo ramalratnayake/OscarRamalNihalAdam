@@ -177,15 +177,10 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
             
             if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
                // exclude all locations in trail, except for curr loc
-               int i = 1;
-               while (i < TRAIL_SIZE) {
-                  if (curr->v != trail[i]) {
-                     locs[count] = curr->v;
-                     count++;      
-                  }
-                  i++;
+               if (notHere(trail,curr->v,TRAIL_SIZE) != 0 && notHere(locs, curr->v, count) != 0 ) {
+                  locs[count] = curr->v;
+                  count++; 
                }
-
             } else {
                locs[count] = curr->v;
                count++;
@@ -196,15 +191,10 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
             
             if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
                // exclude all locations in trail, expect current loc
-               int i = 1;
-               while (i < TRAIL_SIZE) {
-                  if (curr->v != trail[i]) {
-                     locs[count] = curr->v;
-                     count++;      
-                  }
-                  i++;
+               if (notHere(trail,curr->v,TRAIL_SIZE) != 0 && notHere(locs, curr->v, count) != 0 ) {
+                  locs[count] = curr->v;
+                  count++; 
                }
-
             } else {
                if ( notHere(locs, curr->v, count) != 0 ) {
                   locs[count] = curr->v;
