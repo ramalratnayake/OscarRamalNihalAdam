@@ -134,6 +134,9 @@ int main()
     for (i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
+
+	 printf("passed test1\n");
+	 printf("test2\n");
     dv = newDracView("GGE.... SGE.... HGE.... MGE.... DED.V.. "
                      "GST.... SST.... HST.... MST.... DMNT... "
                      "GST.... SST.... HST.... MST.... DD2T...", messages3);
@@ -142,6 +145,7 @@ int main()
     for (i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
+	printf("test3\n");
     dv = newDracView("GST.... SST.... HST.... MST.... DMNT... "
                      "GST.... SST.... HST.... MST.... DLOT... "
                      "GST.... SST.... HST.... MST.... DD2T... "
@@ -152,6 +156,7 @@ int main()
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
     printf("last devious test\n");
+	printf("passed test4\n");
     dv = newDracView("GST.... SST.... HST.... MST.... DPRT... "
                      "GST.... SST.... HST.... MST.... DBRT... "
                      "GST.... SST.... HST.... MST.... DHAT... "
