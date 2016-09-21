@@ -131,7 +131,7 @@ int main()
     printf("Starting from: %s\n", idToName(whereIs(dv,PLAYER_DRACULA)));
 
     LocationID *locations = whereCanIgo(dv, &numlocations, TRUE, FALSE);
-    for (int i = numlocations-1; i >= 0; i--) {
+    for (i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
     dv = newDracView("GGE.... SGE.... HGE.... MGE.... DED.V.. "
@@ -139,7 +139,7 @@ int main()
                      "GST.... SST.... HST.... MST.... DD2T...", messages3);
 
     locations = whereCanIgo(dv, &numlocations, TRUE, FALSE);    
-    for (int i = numlocations-1; i >= 0; i--) {
+    for (i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
     dv = newDracView("GST.... SST.... HST.... MST.... DMNT... "
@@ -148,7 +148,7 @@ int main()
                      "GST.... SST.... HST.... MST.... DHIT... "
                      "GST.... SST.... HST.... MST....", messages3);
     locations = whereCanIgo(dv, &numlocations, TRUE, FALSE);
-    for (int i = numlocations-1; i >= 0; i--) {
+    for (i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
     printf("last devious test\n");
@@ -161,7 +161,7 @@ int main()
                      "GST.... SST.... HST.... MST.... DHIT... "
                      "GST.... SST.... HST.... MST....", messages3);
     locations = whereCanIgo(dv, &numlocations, TRUE, FALSE);
-    for (int i = numlocations-1; i >= 0; i--) {
+    for (i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
     printf("passed tricky conn. locs. tests\n");
