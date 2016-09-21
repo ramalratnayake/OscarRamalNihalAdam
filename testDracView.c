@@ -121,7 +121,7 @@ int main()
     printf("passed our tests\n");
     
     //-------------------------
-    /*
+    
     // Visual inspection required!
     printf("\nConn. locs. tests. Eyeball for authenticity:\n");
     dv = newDracView("GGE.... SGE.... HGE.... MGE.... DED.V.. "
@@ -164,7 +164,7 @@ int main()
     for (int i = numlocations-1; i >= 0; i--) {
         printf("Location is %d, aka %s\n", locations[i], idToName(locations[i]));
     }
-    printf("passed tricky conn. locs. tests\n");*/
+    printf("passed tricky conn. locs. tests\n");
     
     //-------------------------
     
@@ -269,7 +269,7 @@ int main()
                      "GHA.... SMA.... HVR.... MBI.... DNUT... "
                      "GFR.... STO.... HBE.... MRO.... DSTT... "
                      "GHA.... SMA.... HVR.... MBI.... DPAT.M. "
-                     "GHA.... SMA.... HVR.... MBI.... ", messages11);
+                     "GHA.... SMA.... HVR.... MBI....", messages11);
     assert(giveMeTheRound(dv) == 7);
     assert((giveMeTheScore(dv)) == (GAME_START_SCORE - (SCORE_LOSS_DRACULA_TURN*giveMeTheRound(dv))));
     
@@ -311,7 +311,7 @@ int main()
                      "GHA.... SMA.... HVR.... MBI.... DNUT... "
                      "GFR.... STO.... HBE.... MRO.... DSTT... "
                      "GHA.... SMA.... HVR.... MBI.... DPAT.M. "
-                     "GHA.... SMA.... HVR.... MBI.... ", messages11);
+                     "GHA.... SMA.... HVR.... MBI....", messages11);
     assert(giveMeTheRound(dv) == 7);
     assert((giveMeTheScore(dv)) == (GAME_START_SCORE - (SCORE_LOSS_DRACULA_TURN*giveMeTheRound(dv))));
     
@@ -348,7 +348,7 @@ int main()
                      "GHA.... SMA.... HVR.... MBI.... DNUT... "
                      "GFR.... STO.... HBE.... MRO.... DSTT... "
                      "GHA.... SMA.... HVR.... MBI.... DPAT.V. "
-                     "GHA.... SMA.... HVR.... MBI.... ", messages11);
+                     "GHA.... SMA.... HVR.... MBI....", messages11);
     assert(giveMeTheRound(dv) == 7);
     assert((giveMeTheScore(dv)) == (GAME_START_SCORE - (SCORE_LOSS_DRACULA_TURN*giveMeTheRound(dv)) -
                                     SCORE_LOSS_VAMPIRE_MATURES));
@@ -387,7 +387,7 @@ int main()
                      "GHA.... SMA.... HVR.... MBI.... DNU.V.. "
                      "GFR.... STO.... HBE.... MRO.... DSTT... "
                      "GHA.... SMA.... HVR.... MBI.... DPAT.V. "
-                     "GHA.... SMA.... HVR.... MBI.... ", messages11);
+                     "GHA.... SMA.... HVR.... MBI....", messages11);
     assert(giveMeTheRound(dv) == 7);
     assert((giveMeTheScore(dv)) == (GAME_START_SCORE - (SCORE_LOSS_DRACULA_TURN*giveMeTheRound(dv)) -
                                     SCORE_LOSS_VAMPIRE_MATURES));
@@ -426,7 +426,7 @@ int main()
                      "GHA.... SMA.... HVR.... MBI.... DNU.V.. "
                      "GFR.... SNUV... HBE.... MRO.... DSTT... "
                      "GHA.... SMA.... HVR.... MBI.... DPAT.V. "
-                     "GHA.... SMA.... HVR.... MBI.... ", messages11);
+                     "GHA.... SMA.... HVR.... MBI....", messages11);
     assert(giveMeTheRound(dv) == 7);
     assert((giveMeTheScore(dv)) == (GAME_START_SCORE - (SCORE_LOSS_DRACULA_TURN*giveMeTheRound(dv)) -
                                     SCORE_LOSS_VAMPIRE_MATURES));
@@ -467,7 +467,7 @@ int main()
                      "GHA.... SMA.... HVR.... MBI.... DNU.V.. "
                      "GFR.... SNUV... HSZV... MRO.... DSTT... "
                      "GHA.... SMA.... HVR.... MBI.... DPAT... "
-                     "GHA.... SMA.... HVR.... MBI.... ", messages11);
+                     "GHA.... SMA.... HVR.... MBI....", messages11);
     assert(giveMeTheRound(dv) == 7);
     assert((giveMeTheScore(dv)) == (GAME_START_SCORE - (SCORE_LOSS_DRACULA_TURN*giveMeTheRound(dv))));
     
