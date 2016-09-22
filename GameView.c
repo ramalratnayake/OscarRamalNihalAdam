@@ -188,24 +188,35 @@ static void updateHealth(GameView gv, char *pastPlays){
         loc[2] = '\0'; //store the location abbreviation in a string
 
         if(*ptr == 'D'){  //dracula's move
+
+        
             endRoundZero = TRUE; //seeing drac move means anything after this is >round 0
             if(strcmp(loc,"S?") == 0){
                 gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
             }else if (strcmp(loc,"C?") == 0){
         
-            }else if (idToType(abbrevToID(loc)) == SEA){
-                gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
-            }else if (abbrevToID(loc) == CASTLE_DRACULA){
-                gv->health[PLAYER_DRACULA] += LIFE_GAIN_CASTLE_DRACULA;
             }else if(ptr[1] == 'D' && atoi((&ptr[2])) <= 5 && atoi((&ptr[2])) >= 1){
                 char *back = ptr - (SAME_PLACE_NEXT_TURN * NUM_PLAYERS * atoi((&ptr[2])));   
                 char *backLoc = malloc(3*sizeof(char));
                 backLoc[0] = *(back+1);
                 backLoc[1] = *(back+2);
                 backLoc[2] = '\0'; //store the location abbreviation in a string  
-                if(idToType(abbrevToID(backLoc)) == SEA){
-                    gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
+             
+                
+                if(strcmp(backLoc,"S?") == 0){
+                  gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
+                }else if (strcmp(backLoc,"C?") == 0){
+        
+                }else if (idToType(abbrevToID(backLoc)) == SEA){
+                gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
+                }else if (abbrevToID(backLoc) == CASTLE_DRACULA){
+                gv->health[PLAYER_DRACULA] += LIFE_GAIN_CASTLE_DRACULA;
                 }
+                
+            }else if (idToType(abbrevToID(loc)) == SEA){
+                gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
+            }else if (abbrevToID(loc) == CASTLE_DRACULA){
+                gv->health[PLAYER_DRACULA] += LIFE_GAIN_CASTLE_DRACULA;
             }
         }else{ //a hunter's move
             i = HUNTER_ENCOUTNER_START;
@@ -257,6 +268,8 @@ int getHealth(GameView currentView, PlayerID player)
     //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     return currentView->health[player];
 }
+
+// Get the current health points for a given player
 
 
 static void playerLocation(GameView gv, char *pastPlays) {
