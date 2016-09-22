@@ -12,6 +12,9 @@
 #define CHARS_PER_TURN 7
 #define SAME_PLACE_NEXT_TURN 8
 #define MAX_CONNECTIONS 100
+#define HUNTER_ENCOUTNER_START 3
+#define HUNTER_ENCOUNTER_END 6
+#define NUM_HUNTERS NUM_PLAYERS - 1
 
 static Round roundCalc(char *pastPlays);  
 static PlayerID getPlayer(char *pastPlays);
