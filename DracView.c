@@ -2,6 +2,7 @@
 // DracView.c ... DracView ADT implementation
 
 #include <stdlib.h>
+#include <stdio.h>
 #include <assert.h>
 #include "Globals.h"
 #include "Game.h"
@@ -16,15 +17,13 @@
 
 static void calcTraps(char *pastPlays, DracView dv);     
 struct dracView {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     GameView g;
     int minions[NUM_MAP_LOCATIONS][NUM_TRAPS];
 };
-     
-     
+
 // Notes:
 //      - traps and minions needs fixing
-//      - drac location function needs working specifically handling when drac makes special moves
+//      - whereIs needs working specifically handling when drac makes special moves
                
 
 // Creates a new DracView to summarise the current state of the game
@@ -118,6 +117,7 @@ int howHealthyIs(DracView currentView, PlayerID player)
     return getHealth(currentView->g,player);
 }
 
+// Get the current location id of a given player
 LocationID whereIs(DracView currentView, PlayerID player)
 {
     // hunters have to infer location of dracula when he makes a double back etc
@@ -205,8 +205,5 @@ LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
         return whereCanIgo(currentView, numLocations, road, sea);
     } 
 }
-
-
-
 
 
