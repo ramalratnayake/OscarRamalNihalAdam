@@ -18,6 +18,8 @@ static PlayerID getPlayer(char *pastPlays);
 static int calcScore(char *pastPlays);
 static void playerLocation(GameView gv, char *pastPlays);
 static void lastSix(GameView currentView, char *pastPlays);
+static PlayerID charToPlayerID(char *ptr);
+static void updateHealth(GameView gv, char *pastPlays);
 
 struct gameView {
     Round currRound;
@@ -81,6 +83,94 @@ static Round roundCalc(char *pastPlays){
     return round;
 } 
 
+static PlayerID charToPlayerID(char *ptr){
+    PlayerID player;
+    switch(*ptr){
+        case 'G' : player = PLAYER_LORD_GODALMING; break;
+        case 'S' : player = PLAYER_DR_SEWARD ; break;
+        case 'H' : player = PLAYER_VAN_HELSING; break;
+        case 'M' : player = PLAYER_MINA_HARKER; break;
+        case 'D' : player = PLAYER_DRACULA; break;
+    } 
+    return player;
+}
+static void updateHealth(GameView gv, char *pastPlays){ 
+    char *ptr = pastPlays; //pointer to player character
+    int endRoundZero = FALSE; //denotes whether round zero is complete
+    int i = 0;
+    while (i < NUM_PLAYERS){ //initialize array with corect game start life points
+        if (i == PLAYER_DRACULA){
+            gv->health[i] = GAME_START_BLOOD_POINTS;
+        }else{
+            gv->health[i] = GAME_START_HUNTER_LIFE_POINTS;
+        }
+        i++;
+    } 
+       
+    while(*ptr != '\0' || *(&ptr[1]) == '\0'){
+        if(ptr != pastPlays){
+            ptr++; //moves ptr to start of next turn if ptr is not at the start
+        }
+
+        char *loc = malloc(3*sizeof(char));
+        loc[0] = *(ptr+1);
+        loc[1] = *(ptr+2);
+        loc[2] = '\0'; //store the location abbreviation in a string
+
+        if(*ptr == 'D'){  //dracula's move
+            endRoundZero = TRUE; //seeing drac move means anything after this is >round 0
+            if(strcmp(loc,"S?") == 0){
+                gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
+            }else if (strcmp(loc,"C?") == 0){
+        
+            }else if (idToType(abbrevToID(loc)) == SEA){
+                gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
+            }else if (abbrevToID(loc) == CASTLE_DRACULA){
+                gv->health[PLAYER_DRACULA] += LIFE_GAIN_CASTLE_DRACULA;
+            }
+        }else{ //a hunter's move
+            i = HUNTER_ENCOUTNER_START;
+            while (i <= HUNTER_ENCOUNTER_END){ //scanning the range of chars that hold encounters for the hunters
+                switch (*(&ptr[i])){
+                    case 'T' : gv->health[charToPlayerID(ptr)] -= LIFE_LOSS_TRAP_ENCOUNTER; break;
+                    case 'D' : gv->health[charToPlayerID(ptr)] -= LIFE_LOSS_DRACULA_ENCOUNTER; 
+                               gv->health[PLAYER_DRACULA] -= LIFE_LOSS_HUNTER_ENCOUNTER; break;
+                }
+                i++;
+            }
+
+            if(endRoundZero == TRUE){ //cannot check location of previous round unless round > 0
+                char *prev = ptr - (SAME_PLACE_NEXT_TURN * NUM_PLAYERS); //pointer to the start of the player's turn in prev round 
+                char *prevLoc = malloc(3*sizeof(char));
+                prevLoc[0] = *(prev+1);
+                prevLoc[1] = *(prev+2);
+                prevLoc[2] = '\0'; //store the location abbreviation in a string   
+                if(abbrevToID(prevLoc) == abbrevToID(loc)){ //hunter has been in the same place for the previous round as well
+                    gv->health[charToPlayerID(ptr)] += LIFE_GAIN_REST;
+                }
+                free(prevLoc);
+            }
+        }                
+                
+        free(loc); 
+    
+        i = 0;
+        while(i < NUM_HUNTERS){ //counting dead hunters and reetting their life points and placing upper limit to life points
+            if (gv->health[i] <= 0){
+                gv->numDeaths ++;
+                gv->health[i] = GAME_START_HUNTER_LIFE_POINTS;
+            } else if (gv->health[i] > GAME_START_HUNTER_LIFE_POINTS){
+                gv->health[i] = GAME_START_HUNTER_LIFE_POINTS;
+            }
+            i++;
+        } 
+                   
+        ptr += CHARS_PER_TURN; //increments ptr to space b4 next turn's info
+        
+    }   
+    
+    return;
+}
 //scans through the last turn info and returns the next player that shud be playing
 static PlayerID getPlayer(char *pastPlays){
     if(strlen(pastPlays) == 0){
