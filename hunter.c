@@ -24,8 +24,6 @@ static int notHere(int *locs, int x, int size) {
 
 void decideHunterMove(HunterView gameState)
 {
-    // TODO ...
-    // Replace the line below by something better
 
 	int east[19];
 	east[0]=VIENNA;
@@ -122,27 +120,34 @@ void decideHunterMove(HunterView gameState)
 
 		srand(time(NULL));
 
+
+		// note always update in case we run out of time
 		int move = locs[ rand()%a ];
+		registerBestPlay(idToName(move),"I'm on holiday in ...");
 
 		if ( whoAmI(gameState) == PLAYER_LORD_GODALMING) {
 
 			while( notHere(north,move,19) == 0) {
 				move = locs[ rand()%a ];
+				registerBestPlay(idToName(move),"I'm on holiday in ...");
 			}
 		} else if ( whoAmI(gameState) == PLAYER_DR_SEWARD) {
 
 			while( notHere(central,move,19) == 0) {
 				move = locs[ rand()%a ];
+				registerBestPlay(idToName(move),"I'm on holiday in ...");
 			}
 		} else if ( whoAmI(gameState) == PLAYER_VAN_HELSING) {
 
 			while( notHere(south,move,19) == 0) {
 				move = locs[ rand()%a ];
+				registerBestPlay(idToName(move),"I'm on holiday in ...");
 			}
 		} else if ( whoAmI(gameState) == PLAYER_MINA_HARKER) {
 
 			while( notHere(east,move,19) == 0) {
 				move = locs[ rand()%a ];
+				registerBestPlay(idToName(move),"I'm on holiday in ...");
 			}
 		}
 
