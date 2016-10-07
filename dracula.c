@@ -8,6 +8,7 @@
 #include <time.h>
 
 int isInTrail (DracView gameState, LocationID move);
+int isValidMove(DracView gameState, LocationID move);
 /*
 static int here(int *locs, int x, int size) {
    int i = 0;
@@ -42,20 +43,21 @@ void decideDraculaMove(DracView gameState)
         int i = 1;
         int move = locs[i];
         
-        while ((isInTrail (gameState, move) == TRUE || move == ST_JOSEPH_AND_ST_MARYS || move == CASTLE_DRACULA) && i<a){
+        while (isValidMove(gameState, move) == FALSE){
+            //i = rand()%a;
+            i++; 
 		    move = locs[i];
-            i++;            
+                   
         }
         printf ("my move is %s\n", idToName(move));
-        if(i != a){
-            registerBestPlay(idToAbbrev(move),"Mwuhahahaha");
-        }
-/*
-		// checks for hunter locations to make a better decision
+        registerBestPlay(idToAbbrev(move),"Mwuhahahaha");
+        
+
+/*		// checks for hunter locations to make a better decision
 		int b;
         int *hunterLocs = whereCanTheyGo(gameState,&b,PLAYER_LORD_GODALMING, 1,1,1);
 		
-		while (here(hunterLocs,move,b) == 1) {
+		while (here(hunterLocs,move,b) == 0) {
 			move = locs[ rand()%a ];
 		}
 
@@ -75,5 +77,16 @@ int isInTrail (DracView gameState, LocationID move){
         i++;
     }
     return FALSE;
+}
+    
+int isValidMove(DracView gameState, LocationID move){
+    if(isInTrail (gameState, move) == TRUE){
+        return FALSE;
+    }else if (move == ST_JOSEPH_AND_ST_MARYS){
+        return FALSE;
+    }else if (move == whereIs(gameState, PLAYER_DRACULA)){
+        return FALSE;
+    }
+    return TRUE;
 }
             
