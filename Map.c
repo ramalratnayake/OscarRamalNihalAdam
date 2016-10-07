@@ -72,23 +72,23 @@ static VList insertVList(VList L, LocationID v, TransportID type)
 
 static int inVList(VList L, LocationID v, TransportID type)
 {
-	VList cur;
-	for (cur = L; cur != NULL; cur = cur->next) {
-		if (cur->v == v && cur->type == type) return 1;
-	}
-	return 0;
+   VList cur;
+   for (cur = L; cur != NULL; cur = cur->next) {
+      if (cur->v == v && cur->type == type) return 1;
+   }
+   return 0;
 }
 
 // Add a new edge to the Map/Graph
 void addLink(Map g, LocationID start, LocationID end, TransportID type)
 {
-	assert(g != NULL);
-	// don't add edges twice
-	if (!inVList(g->connections[start],end,type)) {
-   	g->connections[start] = insertVList(g->connections[start],end,type);
-   	g->connections[end] = insertVList(g->connections[end],start,type);
-   	g->nE++;
-	}
+   assert(g != NULL);
+   // don't add edges twice
+   if (!inVList(g->connections[start],end,type)) {
+      g->connections[start] = insertVList(g->connections[start],end,type);
+      g->connections[end] = insertVList(g->connections[end],start,type);
+      g->nE++;
+   }
 }
 
 // Display content of Map/Graph
@@ -169,15 +169,21 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
    VList curr = g->connections[from];
    int count = 0; 
    locs[count++] = from;
-
+   VList noobCheck;
    while (curr != NULL){
-      
+      int foundRail = FALSE;
+      noobCheck = curr;   
       if( notHere(locs, curr->v, count) != 0) {      
          if(road == 1 && (idToType(curr->v) == LAND || curr->type == ROAD ) ) {
-            
+            while(noobCheck != NULL){
+                if (noobCheck->v == curr->v && noobCheck->type == RAIL && rail == FALSE){
+                    foundRail = TRUE;
+                }
+                noobCheck = noobCheck->next;  
+            }
             if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
                // exclude all locations in trail, except for curr loc
-               if (notHere(trail,curr->v,TRAIL_SIZE) != 0 && notHere(locs, curr->v, count) != 0 ) {
+               if (notHere(trail,curr->v,TRAIL_SIZE) != 0 && notHere(locs, curr->v, count) != 0 && foundRail == FALSE) {
                   locs[count] = curr->v;
                   count++; 
                }
@@ -187,7 +193,7 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
             }
          }
 
-         if(sea == 1 && curr->type == BOAT ) {
+         else if(sea == 1 && curr->type == BOAT ) {
             
             if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
                // exclude all locations in trail, expect current loc
@@ -204,7 +210,7 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
          }
 
          // drac never travels by rail
-         if(rail == 1) {
+         else if(rail == 1) {
 
             int sum = rounds + player;
 
@@ -223,6 +229,8 @@ int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, i
                }     
             }
          }
+        
+         
       }
       curr = curr->next;
    }
