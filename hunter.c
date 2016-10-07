@@ -105,13 +105,13 @@ void decideHunterMove(HunterView gameState)
 
 	if(giveMeTheRound(gameState) == 0){
         if(whoAmI(gameState) ==  PLAYER_LORD_GODALMING){
-            registerBestPlay(ab(MANCHESTER),"I'm on holiday in Manchester");
+            registerBestPlay(idToAbbrev(MANCHESTER),"I'm on holiday in Manchester");
         } else if(whoAmI(gameState) ==  PLAYER_DR_SEWARD){
-            registerBestPlay(ab(ROME),"I'm on holiday in Rome");
+            registerBestPlay(idToAbbrev(ROME),"I'm on holiday in Rome");
         } else if(whoAmI(gameState) ==  PLAYER_VAN_HELSING){
-            registerBestPlay(ab(MADRID),"I'm on holiday in Madrid");
+            registerBestPlay(idToAbbrev(MADRID),"I'm on holiday in Madrid");
         } else if(whoAmI(gameState) ==  PLAYER_MINA_HARKER){
-            registerBestPlay(ab(SZEGED),"I'm on holiday in Szeged");
+            registerBestPlay(idToAbbrev(SZEGED),"I'm on holiday in Szeged");
         } 
     } else {
 		
@@ -123,34 +123,34 @@ void decideHunterMove(HunterView gameState)
 
 		// note always update in case we run out of time
 		int move = locs[ rand()%a ];
-		registerBestPlay(ab(move),"I'm on holiday in ...");
+		registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 
 		if ( whoAmI(gameState) == PLAYER_LORD_GODALMING) {
 
 			while( notHere(north,move,19) == 1) {
 				move = locs[ rand()%a ];
-				registerBestPlay(ab(move),"I'm on holiday in ...");
+				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 			}
 		} else if ( whoAmI(gameState) == PLAYER_DR_SEWARD) {
 
 			while( notHere(central,move,19) == 1) {
 				move = locs[ rand()%a ];
-				registerBestPlay(ab(move),"I'm on holiday in ...");
+				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 			}
 		} else if ( whoAmI(gameState) == PLAYER_VAN_HELSING) {
 
 			while( notHere(south,move,19) == 1) {
 				move = locs[ rand()%a ];
-				registerBestPlay(ab(move),"I'm on holiday in ...");
+				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 			}
 		} else if ( whoAmI(gameState) == PLAYER_MINA_HARKER) {
 
 			while( notHere(east,move,19) == 1) {
 				move = locs[ rand()%a ];
-				registerBestPlay(ab(move),"I'm on holiday in ...");
+				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 			}
 		}
 
-		registerBestPlay(ab(move),"I'm on holiday in ...");
+		registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 	}
 }
