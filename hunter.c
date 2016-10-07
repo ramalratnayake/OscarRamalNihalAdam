@@ -115,41 +115,92 @@ void decideHunterMove(HunterView gameState)
         } 
     } else {
 		
-		int a;
-        int *locs = whereCanIgo(gameState, &a, 1,1,1);
 
-		srand(time(NULL));
+      srand(time(NULL));
 
-
-		// note always update in case we run out of time
-		int move = locs[ rand()%a ];
-		registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-
+      int move;
+		
 		if ( whoAmI(gameState) == PLAYER_LORD_GODALMING) {
+               
+         int a;
+         int *locs = whereCanIgo(gameState, &a, 1,1,1);
 
-			while( notHere(north,move,19) == 1) {
-				move = locs[ rand()%a ];
-				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-			}
+         // note: when player goes to hospital we need to travel back to partrolling 
+
+		   // note always update in case we run out of time
+		   move = locs[ rand()%a ];
+		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+
+         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_LORD_GODALMING ) < 3 ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)) ,"Resting...");
+         } else {
+			   while( notHere(north,move,19) == 1) {
+				   move = locs[ rand()%a ];
+				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+			   }
+         }
 		} else if ( whoAmI(gameState) == PLAYER_DR_SEWARD) {
+      
+         
+         int a;
+         int *locs = whereCanIgo(gameState, &a, 1,1,1);
 
-			while( notHere(central,move,19) == 1) {
-				move = locs[ rand()%a ];
-				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-			}
+         // note: when player goes to hospital we need to travel back to partrolling 
+
+		   // note always update in case we run out of time
+		   move = locs[ rand()%a ];
+		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+
+         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_DR_SEWARD ) < 3 ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_DR_SEWARD)) ,"Resting...");
+         } else {
+			   while( notHere(central,move,19) == 1) {
+				   move = locs[ rand()%a ];
+				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+			   }
+         }
 		} else if ( whoAmI(gameState) == PLAYER_VAN_HELSING) {
+         
 
-			while( notHere(south,move,19) == 1) {
-				move = locs[ rand()%a ];
-				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-			}
+         int a;
+         int *locs = whereCanIgo(gameState, &a, 1,1,1);
+
+         // note: when player goes to hospital we need to travel back to partrolling 
+
+		   // note always update in case we run out of time
+		   move = locs[ rand()%a ];
+		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+
+         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_VAN_HELSING ) < 3 ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_VAN_HELSING)) ,"Resting...");
+         } else {
+			   while( notHere(south,move,19) == 1) {
+				   move = locs[ rand()%a ];
+				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+			   }
+         }
 		} else if ( whoAmI(gameState) == PLAYER_MINA_HARKER) {
+        
+            
+         int a;
+         int *locs = whereCanIgo(gameState, &a, 1,1,1);
 
-			while( notHere(east,move,19) == 1) {
-				move = locs[ rand()%a ];
-				registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-			}
-		}
+         // note: when player goes to hospital we need to travel back to partrolling 
+
+		   // note always update in case we run out of time
+		   move = locs[ rand()%a ];
+		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+
+
+         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_MINA_HARKER ) < 3 ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_MINA_HARKER)) ,"Resting...");
+         } else {
+			   while( notHere(east,move,19) == 1) {
+				   move = locs[ rand()%a ];
+				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+			   }
+         }		
+      }
 
 		registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 	}
