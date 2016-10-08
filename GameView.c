@@ -1,4 +1,4 @@
-// GameView.c ... GameView ADT implementation
+    // GameView.c ... GameView ADT implementation
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +23,8 @@ static void playerLocation(GameView gv, char *pastPlays);
 static void lastSix(GameView currentView, char *pastPlays);
 static PlayerID charToPlayerID(char *ptr);
 static void updateHealth(GameView gv, char *pastPlays);
+static void checkDoubleBack(char *pastPlays, char*ptr, char **pastLoc);
+static void checkHide(char *pastPlays, char* ptr, char **hideLoc);
 
 struct gameView {
     Round currRound;
@@ -181,38 +183,36 @@ static void updateHealth(GameView gv, char *pastPlays){
         if(ptr != pastPlays){
             ptr++; //moves ptr to start of next turn if ptr is not at the start
         }
-
         char *loc = malloc(3*sizeof(char));
-        loc[0] = *(ptr+1);
-        loc[1] = *(ptr+2);
-        loc[2] = '\0'; //store the location abbreviation in a string
-
+                
         if(*ptr == 'D'){  //dracula's move
-
-        
             endRoundZero = TRUE; //seeing drac move means anything after this is >round 0
+            if(ptr[1] == 'D' && atoi((&ptr[2])) <= 5 && atoi((&ptr[2])) >= 1){ //if anything from DD1 to DD5
+                char *pastLoc = NULL;
+                //pass in a address to the pointer pastLoc so that pastLoc can be altered by the function
+                checkDoubleBack(pastPlays, ptr, &pastLoc);
+                //pastLoc now stores the start of the turn which contains the actual location 
+                loc[0] = *(pastLoc+1);                     
+                loc[1] = *(pastLoc+2);
+                loc[2] = '\0'; //store the location abbreviation in a string 
+            }else if(ptr[1] == 'H' && ptr[2] == 'I'){
+                char *lastLoc;
+                checkHide(pastPlays, ptr, &lastLoc);               
+                loc[0] = *(lastLoc+1);                     
+                loc[1] = *(lastLoc+2);
+                loc[2] = '\0'; //store the location abbreviation in a string
+            }else{
+                loc[0] = *(ptr+1);
+                loc[1] = *(ptr+2);
+                loc[2] = '\0'; //store the location abbreviation in a string 
+            } 
+            //finds out what that location is and updates health in struct      
             if(strcmp(loc,"S?") == 0){
                 gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
             }else if (strcmp(loc,"C?") == 0){
-        
-            }else if(ptr[1] == 'D' && atoi((&ptr[2])) <= 5 && atoi((&ptr[2])) >= 1){
-                char *back = ptr - (SAME_PLACE_NEXT_TURN * NUM_PLAYERS * atoi((&ptr[2])));   
-                char *backLoc = malloc(3*sizeof(char));
-                backLoc[0] = *(back+1);
-                backLoc[1] = *(back+2);
-                backLoc[2] = '\0'; //store the location abbreviation in a string  
-             
-                
-                if(strcmp(backLoc,"S?") == 0){
-                  gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
-                }else if (strcmp(backLoc,"C?") == 0){
-        
-                }else if (idToType(abbrevToID(backLoc)) == SEA){
-                gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
-                }else if (abbrevToID(backLoc) == CASTLE_DRACULA){
-                gv->health[PLAYER_DRACULA] += LIFE_GAIN_CASTLE_DRACULA;
-                }
-                
+                //dont do anything, prevents passing C? and getting error from abbrevToId()
+            }else if (strcmp(loc,"TP") == 0){
+                gv->health[PLAYER_DRACULA] += LIFE_GAIN_CASTLE_DRACULA; //gets teleported to castle            
             }else if (idToType(abbrevToID(loc)) == SEA){
                 gv->health[PLAYER_DRACULA] -= LIFE_LOSS_SEA;
             }else if (abbrevToID(loc) == CASTLE_DRACULA){
@@ -245,7 +245,7 @@ static void updateHealth(GameView gv, char *pastPlays){
         free(loc); 
     
         i = 0;
-        while(i < NUM_HUNTERS){ //counting dead hunters and reetting their life points and placing upper limit to life points
+        while(i < NUM_HUNTERS){ //counting dead hunters and resetting their life points and placing upper limit to life points
             if (gv->health[i] <= 0){
                 gv->numDeaths ++;
                 gv->health[i] = GAME_START_HUNTER_LIFE_POINTS;
@@ -262,6 +262,30 @@ static void updateHealth(GameView gv, char *pastPlays){
     return;
 }
 
+//checks the Double Back locations and updates the pointer
+static void checkDoubleBack(char *pastPlays, char* ptr, char **pastLoc){
+    char *back = ptr - (SAME_PLACE_NEXT_TURN * NUM_PLAYERS * atoi((&ptr[2]))); 
+    if(back[1] == 'H' && back[2] == 'I'){
+        *pastLoc = back - (SAME_PLACE_NEXT_TURN * NUM_PLAYERS); //saves the ppointer to the turn which contained the correct location of double back
+    }else{
+        *pastLoc = back;
+    }     
+    return;   
+}    
+    
+static void checkHide(char *pastPlays, char* ptr, char **hideLoc){
+    char *lastLoc = ptr - (SAME_PLACE_NEXT_TURN * NUM_PLAYERS); //go back a round
+    if(lastLoc[1] == 'D' && atoi((&lastLoc[2])) <= 5 && atoi((&lastLoc[2])) >= 1){     
+        char *dBackLoc;
+        checkDoubleBack(pastPlays, lastLoc, &dBackLoc);
+        
+        *hideLoc = dBackLoc;
+    }else{
+        *hideLoc = lastLoc;
+    }
+    return;
+}
+    
 // Get the current health points for a given player
 int getHealth(GameView currentView, PlayerID player)
 {
