@@ -6,25 +6,125 @@
 #include "Game.h"
 #include "HunterView.h"
 #include <time.h>
+#include <assert.h>
 
+/*
+////////////////////////////////////////////
+Notes: 
+   - when transported to JM needs to go back to patrolling region
+   - 
 
+////////////////////////////////////////////
+*/
 
+/*
+Strategy:
+   - randomly patrolling a region
 
+*/
 
+/*
+Strategy ideas:
+   - 
+*/
+
+static int makeRandomMove(HunterView hv,int player,int ver) {
+
+   int a;
+   int *locs = whereCanIgo(hv, &a, 1,1,1);
+   
+   int r = rand()%a;
+   
+   if (ver == 1) {
+      return locs[a-r];
+   } else {
+      return locs[r];
+   }
+}
+
+static int isLegal(HunterView hv, int move) {
+   int result = TRUE;
+
+   if(idToType(move) == SEA) {
+      result = FALSE;
+   }
+   return result;
+}
+
+/*
 static int notHere(int *locs, int x, int size) {
    int i = 0;
    while(i < size) {
       if(locs[i] == x) {
+         // 0 -> found         
          return 0;
       }
       i++;
    }
+   // 1 -> not found
    return 1;
 }
 
+static int checkTrail(HunterView hv, int player,int move) {
+   int *t = malloc(TRAIL_SIZE*sizeof(int));
+   giveMeTheTrail(hv,player,t);
+   
+
+   if (notHere(t,move,TRAIL_SIZE) == 1) {
+      return 0;
+   } else {
+      return 1;
+   } 
+}*/
+
 void decideHunterMove(HunterView gameState)
 {
+   srand(time(NULL));
+   int player = whoAmI(gameState);
+   int round = giveMeTheRound(gameState);
 
+
+   if(round == 0){
+        if(player ==  PLAYER_LORD_GODALMING){
+            registerBestPlay(idToAbbrev(MANCHESTER),"I'm on holiday in Manchester");
+        } else if(player ==  PLAYER_DR_SEWARD){
+            registerBestPlay(idToAbbrev(ROME),"I'm on holiday in Rome");
+        } else if(player ==  PLAYER_VAN_HELSING){
+            registerBestPlay(idToAbbrev(MADRID),"I'm on holiday in Madrid");
+        } else if(player ==  PLAYER_MINA_HARKER){
+            registerBestPlay(idToAbbrev(SZEGED),"I'm on holiday in Szeged");
+        } 
+   } else {
+         
+         int move = makeRandomMove(gameState,player,0);
+   
+         if(move == whereIs(gameState,player)) {
+            move = makeRandomMove(gameState,player,1);
+         }
+
+         while (isLegal(gameState,move) == FALSE) {
+            move = makeRandomMove(gameState,player,0);
+         }
+
+         registerBestPlay(idToAbbrev(move),"Patrolling...");
+
+         /*if ( whereIs(gameState,PLAYER_LORD_GODALMING) == ST_JOSEPH_AND_ST_MARYS ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)),"Resting at JM"); 
+         } else if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_LORD_GODALMING ) < 3 ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)) ,"Resting...");
+         } else {
+			   while( notHere(north,move,19) == 1) {
+				   move = locs[ rand()%a ];
+				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+			   }
+         }*/
+   }
+}
+
+/*
+
+
+   // set up regions
 	int east[19];
 	east[0]=VIENNA;
 	east[1]=ZAGREB;
@@ -103,55 +203,43 @@ void decideHunterMove(HunterView gameState)
 	south[17]=SARAGOSSA;
 	south[18]=NANTES;
 
-	if(giveMeTheRound(gameState) == 0){
-        if(whoAmI(gameState) ==  PLAYER_LORD_GODALMING){
-            registerBestPlay(idToAbbrev(MANCHESTER),"I'm on holiday in Manchester");
-        } else if(whoAmI(gameState) ==  PLAYER_DR_SEWARD){
-            registerBestPlay(idToAbbrev(ROME),"I'm on holiday in Rome");
-        } else if(whoAmI(gameState) ==  PLAYER_VAN_HELSING){
-            registerBestPlay(idToAbbrev(MADRID),"I'm on holiday in Madrid");
-        } else if(whoAmI(gameState) ==  PLAYER_MINA_HARKER){
-            registerBestPlay(idToAbbrev(SZEGED),"I'm on holiday in Szeged");
-        } 
-    } else {
-		
 
-      srand(time(NULL));
 
-      int move;
-		
-		if ( whoAmI(gameState) == PLAYER_LORD_GODALMING) {
-               
-         int a;
-         int *locs = whereCanIgo(gameState, &a, 1,1,1);
 
-         // note: when player goes to hospital we need to travel back to partrolling 
 
-		   // note always update in case we run out of time
-		   move = locs[ rand()%a ];
-		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 
-         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_LORD_GODALMING ) < 3 ) {
-            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)) ,"Resting...");
-         } else {
-			   while( notHere(north,move,19) == 1) {
-				   move = locs[ rand()%a ];
-				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-			   }
+
+
+
+
+printf("Im here: %s\n", idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)) );
+   
+         int i = 0;
+         while( i < a) {
+         	printf("%s, ", idToAbbrev(locs[i]) );
+         	i++;
          }
+         printf("\n");
+
+
+
+
 		} else if ( whoAmI(gameState) == PLAYER_DR_SEWARD) {
       
          
-         int a;
-         int *locs = whereCanIgo(gameState, &a, 1,1,1);
+         move = makeRandomMove(gameState);
 
-         // note: when player goes to hospital we need to travel back to partrolling 
+         if(move == whereIs(gameState,player)) {
+            move = makeRandomMove(gameState);
+         }
 
-		   // note always update in case we run out of time
-		   move = locs[ rand()%a ];
-		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+		   registerBestPlay(idToAbbrev(move),"Patrolling...");
 
-         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_DR_SEWARD ) < 3 ) {
+
+		   
+         if ( whereIs(gameState,PLAYER_DR_SEWARD) == ST_JOSEPH_AND_ST_MARYS ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_DR_SEWARD)),"Resting at JM"); 
+         } else if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_DR_SEWARD ) < 3 ) {
             registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_DR_SEWARD)) ,"Resting...");
          } else {
 			   while( notHere(central,move,19) == 1) {
@@ -162,16 +250,20 @@ void decideHunterMove(HunterView gameState)
 		} else if ( whoAmI(gameState) == PLAYER_VAN_HELSING) {
          
 
-         int a;
-         int *locs = whereCanIgo(gameState, &a, 1,1,1);
+         move = makeRandomMove(gameState);
 
-         // note: when player goes to hospital we need to travel back to partrolling 
+         if(move == whereIs(gameState,player)) {
+            move = makeRandomMove(gameState);
+         }
 
-		   // note always update in case we run out of time
-		   move = locs[ rand()%a ];
-		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+		   registerBestPlay(idToAbbrev(move),"Patrolling...");
+  
 
-         if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_VAN_HELSING ) < 3 ) {
+
+		   
+         if ( whereIs(gameState,PLAYER_VAN_HELSING) == ST_JOSEPH_AND_ST_MARYS ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_VAN_HELSING)),"Resting at JM"); 
+         } else if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_VAN_HELSING ) < 3 ) {
             registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_VAN_HELSING)) ,"Resting...");
          } else {
 			   while( notHere(south,move,19) == 1) {
@@ -182,16 +274,16 @@ void decideHunterMove(HunterView gameState)
 		} else if ( whoAmI(gameState) == PLAYER_MINA_HARKER) {
         
             
-         int a;
-         int *locs = whereCanIgo(gameState, &a, 1,1,1);
+         move = makeRandomMove(gameState);
 
-         // note: when player goes to hospital we need to travel back to partrolling 
+         if(move == whereIs(gameState,player)) {
+            move = makeRandomMove(gameState);
+         }
+      
+		   registerBestPlay(idToAbbrev(move),"Patrolling...");
 
-		   // note always update in case we run out of time
-		   move = locs[ rand()%a ];
-		   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
-
-
+		   
+         // east has Jm located in it 
          if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_MINA_HARKER ) < 3 ) {
             registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_MINA_HARKER)) ,"Resting...");
          } else {
@@ -199,9 +291,10 @@ void decideHunterMove(HunterView gameState)
 				   move = locs[ rand()%a ];
 				   registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 			   }
-         }		
+         }
       }
 
-		registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
+		//registerBestPlay(idToAbbrev(move),"I'm on holiday in ...");
 	}
-}
+
+*/
