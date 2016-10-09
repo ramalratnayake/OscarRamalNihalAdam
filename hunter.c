@@ -8,6 +8,8 @@
 #include <time.h>
 #include <assert.h>
 
+#define MAX_ITERATIONS 100
+
 /*
 ////////////////////////////////////////////
 Notes: 
@@ -37,10 +39,31 @@ static int makeRandomMove(HunterView hv,int player,int ver) {
    
    if (ver == 1) {
       return locs[a-r];
+   } else if (ver == 2) {
+      return locs[a - r*(giveMeTheRound(hv)%2)];
    } else {
       return locs[r];
    }
 }
+/*
+static int makeSemiRandomMove(HunterView hv,int player) {
+
+   int a;
+   int *locs = whereCanIgo(hv, &a, 1,1,1);
+   
+   int round = giveMeTheRound(hv);
+   int i;
+   
+   if (round%3 == 0) {
+      i = locs[a];
+   } else if (round%3 == 1) {
+      i = locs[a/2];
+   } else {
+      i = locs[3/4*a];
+   }
+
+   return i;
+}*/
 
 static int isLegal(HunterView hv, int move) {
    int result = TRUE;
@@ -51,7 +74,7 @@ static int isLegal(HunterView hv, int move) {
    return result;
 }
 
-/*
+
 static int notHere(int *locs, int x, int size) {
    int i = 0;
    while(i < size) {
@@ -65,17 +88,46 @@ static int notHere(int *locs, int x, int size) {
    return 1;
 }
 
-static int checkTrail(HunterView hv, int player,int move) {
+static int checkTrail(HunterView hv, int player,int move,int version) {
    int *t = malloc(TRAIL_SIZE*sizeof(int));
    giveMeTheTrail(hv,player,t);
    
+   if (version == 1) {
 
-   if (notHere(t,move,TRAIL_SIZE) == 1) {
-      return 0;
+      if (notHere(t,move,TRAIL_SIZE) == 1) {
+         return 0;
+      } else {
+         return 1;
+      } 
    } else {
-      return 1;
-   } 
-}*/
+      // checks prev 3 moves
+      if (move == t[0] || move == t[1] || move == t[2]) {
+         return 1;
+      } else {
+         return 0;
+      }
+   }   
+}
+
+// compares the trails to all possible positions to move to 
+static int checkDracTrail(HunterView hv, int move) {
+   int *t = malloc(TRAIL_SIZE*sizeof(int));
+   giveMeTheTrail(hv,PLAYER_DRACULA,t);
+
+   int a;
+   int *locs = whereCanIgo(hv, &a, 1,1,1);
+
+
+   int x = 0;
+
+   while(x < a) {
+      if (notHere(t,locs[x],TRAIL_SIZE) == 0) {
+         return locs[x];
+      }
+      x++;
+   }
+   return -1;
+}
 
 void decideHunterMove(HunterView gameState)
 {
@@ -95,22 +147,37 @@ void decideHunterMove(HunterView gameState)
             registerBestPlay(idToAbbrev(SZEGED),"I'm on holiday in Szeged");
         } 
    } else {
-         
-         int move = makeRandomMove(gameState,player,0);
-   
-         if(move == whereIs(gameState,player)) {
-            move = makeRandomMove(gameState,player,1);
+         if ( whereIs(gameState,player) == ST_JOSEPH_AND_ST_MARYS && howHealthyIs(gameState,player) < 9 ) {
+            registerBestPlay("JM", "Resting at JM");
+         } else if ( howHealthyIs(gameState,player) <= 6 ) {
+            registerBestPlay(idToAbbrev(whereIs(gameState,player)),"Resting..."); 
+         } else {
+
+            int move = makeRandomMove(gameState,player,0);
+
+            while (move == whereIs(gameState,player)) {
+               move = makeRandomMove(gameState,player,1);
+            }
+
+            int x = 0;
+            while (isLegal(gameState,move) == FALSE && checkTrail(gameState,player,move,1) == TRUE ) {
+               move = makeRandomMove(gameState,player,2);
+               if (x > MAX_ITERATIONS) {
+                  break;
+               }
+               x++;
+            }
+
+            // Picks in move to actively hunts dracula, if within dracs trail     
+            int check = checkDracTrail(gameState,move);            
+            if (check != -1) {
+               move = check;                                  
+            }
+
+            registerBestPlay(idToAbbrev(move),"Patrolling...");
          }
 
-         while (isLegal(gameState,move) == FALSE) {
-            move = makeRandomMove(gameState,player,0);
-         }
-
-         registerBestPlay(idToAbbrev(move),"Patrolling...");
-
-         /*if ( whereIs(gameState,PLAYER_LORD_GODALMING) == ST_JOSEPH_AND_ST_MARYS ) {
-            registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)),"Resting at JM"); 
-         } else if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_LORD_GODALMING ) < 3 ) {
+         /* else if (giveMeTheRound(gameState)%6 == 0 ||  howHealthyIs(gameState, PLAYER_LORD_GODALMING ) < 3 ) {
             registerBestPlay(idToAbbrev(whereIs(gameState,PLAYER_LORD_GODALMING)) ,"Resting...");
          } else {
 			   while( notHere(north,move,19) == 1) {
