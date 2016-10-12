@@ -23,6 +23,16 @@ struct MapRep {
    VList connections[NUM_MAP_LOCATIONS]; // array of lists
 };
 
+typedef struct QueueNode {
+   int value;
+   struct QueueNode *next;
+} QueueNode;
+
+typedef struct QueueRep {
+   QueueNode *head;  // ptr to first node
+   QueueNode *tail;  // ptr to last node
+} QueueRep;
+
 static void addConnections(Map);
 
 // Create a new empty graph (for a map)
@@ -135,107 +145,191 @@ int numE(Map g, TransportID type)
     return nE;
 }
 
-static int notHere(int *locs, int x, int size) {
+
+static void includeReachableByRail(Map map, int *reachable, LocationID from, int railLength)
+{
+    assert(railLength >= 0);
+
+    reachable[from] = 1;
+
+    if (railLength > 0) {
+        VList cur;
+        for (cur = map->connections[from]; cur != NULL; cur = cur->next) {
+            if (cur->type == RAIL) {
+                includeReachableByRail(map, reachable, cur->v, railLength - 1);
+            }
+        }
+    }
+}
+
+
+int *connectedLocs(Map map ,int *numLocations, int from, int drac, int railLength, int road, int sea)
+{
+    //a boolean for each location, if it is reachable
+    int *reachable = calloc(NUM_MAP_LOCATIONS,sizeof (int));
+
+    //setting the 'from' location as reachable
+    reachable[from] = 1;
+
+    //for each connection that is by ROAD or SEA, set it to reachable
+    //if road or sea is set to true
+    VList cur;
+    TransportID type;
+    for (cur = map->connections[from]; cur != NULL; cur = cur->next) {
+        type = cur->type;
+        if ((type == ROAD && road) || (type == BOAT && sea)) {
+            reachable[cur->v] = 1;
+        }
+    }
+
+    //include the places reachable by rail
+    includeReachableByRail(map, reachable, from, railLength);
+
+    //going through and putting every reachable LocationID into an array
+    LocationID *locations = malloc(NUM_MAP_LOCATIONS * sizeof (LocationID));
+    int i, index = 0;
+    for (i = 0; i < NUM_MAP_LOCATIONS; i++) {
+        //don't allow dracula to go to the hospital
+        if (reachable[i]) {
+            if (!(drac && i == ST_JOSEPH_AND_ST_MARYS)) {
+                locations[index] = i;
+                index++;
+            }
+        }
+    }
+    free(reachable);
+
+    //setting the number of locations actually returned
+    *numLocations = index;
+
+    return locations;
+}
+
+// return array of locs
+int shortestPath(Map g, int src, int dest, int *path, int railLength) {
+   
+   assert(g != NULL);
+   // initialising the array
+
+   int visited[NUM_MAP_LOCATIONS] = {0};
+
+   int *prev = malloc( NUM_MAP_LOCATIONS * sizeof(int));
    int i = 0;
-   while(i < size) {
-      if(locs[i] == x) {
-         return 0;
-      }
+   while(i < NUM_MAP_LOCATIONS ){
+      prev[i] = -1;
       i++;
    }
-   return 1;
+
+   // starting from dest, working backwards
+   // adding dest to the prev array   
+   prev[dest] = dest;
+   
+   Queue q = newQueue();
+   QueueJoin(q,dest);
+   
+   while (QueueIsEmpty(q) != 1 && src != dest) {
+      // pulling the vertex of the queue
+      int toCheck = QueueLeave(q);
+
+      int numLocs;
+      int *locs = connectedLocs(g,&numLocs,toCheck,0,railLength,1,1);
+
+      i = 0;
+      while(i < numLocs) {
+         if ( !visited[locs[i]] ) { 
+            QueueJoin(q,locs[i]);
+            prev[locs[i]] = toCheck;
+            visited[locs[i]] = 1;
+         }
+         i++;
+      }
+   }
+   int index = src; 
+   int length = 0;
+   
+   if (prev[index] != -1) {
+      // adding the first vertex to the path array, if a coonection exists
+      path[length] = src;
+      length++;
+   }
+   
+   // while dest not found in prev array, and there is a connection
+   while(prev[index] != index && prev[index] != -1 ){
+      // adding to path    
+      path[length] = prev[index];
+      length++;
+      index = prev[index]; 
+   }   
+   free(prev);
+   return length;
 }
 
-static int connectByRail(Map g, int *locs, int from, int count, int check) {
 
-   VList curr = g->connections[from];
+// queue functions
 
+// create new empty Queue
+Queue newQueue()
+{
+   Queue q;
+   q = malloc(sizeof(QueueRep));
+   assert(q != NULL);
+   q->head = NULL;
+   q->tail = NULL;
+   return q;
+}
+
+// free memory used by Queue
+void dropQueue(Queue Q)
+{
+   QueueNode *curr, *next;
+   assert(Q != NULL);
+   // free list nodes
+   curr = Q->head;
    while (curr != NULL) {
-      if ( notHere(locs, curr->v, count) != 0  && curr->type == RAIL) {
-         locs[count] = curr->v;
-         count++;
-
-         if (check == 1) {
-            count = connectByRail(g,locs,curr->v,count,0); 
-         }
-      }
-      curr = curr->next;
+      next = curr->next;
+      free(curr);
+      curr = next;
    }
-   return count;
+   // free queue rep
+   free(Q);
 }
 
 
-int connectedLocs(Map g ,int *locs, int from,int player, int rounds, int road, int rail, int sea, int *trail) {
-   VList curr = g->connections[from];
-   int count = 0; 
-   locs[count++] = from;
-   VList noobCheck;
-   while (curr != NULL){
-      int foundRail = FALSE;
-      noobCheck = curr;   
-      if( notHere(locs, curr->v, count) != 0) {      
-         if(road == 1 && (idToType(curr->v) == LAND || curr->type == ROAD ) ) {
-            while(noobCheck != NULL){
-                if (noobCheck->v == curr->v && noobCheck->type == RAIL && rail == FALSE){
-                    foundRail = TRUE;
-                }
-                noobCheck = noobCheck->next;  
-            }
-            if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
-               // exclude all locations in trail, except for curr loc
-               if (notHere(trail,curr->v,TRAIL_SIZE) != 0 && notHere(locs, curr->v, count) != 0 && foundRail == FALSE) {
-                  locs[count] = curr->v;
-                  count++; 
-               }
-            } else {
-               locs[count] = curr->v;
-               count++;
-            }
-         }
-
-         else if(sea == 1 && curr->type == BOAT ) {
-            
-            if (player == PLAYER_DRACULA && curr->v != abbrevToID("JM") ) {
-               // exclude all locations in trail, expect current loc
-               if (notHere(trail,curr->v,TRAIL_SIZE) != 0 && notHere(locs, curr->v, count) != 0 ) {
-                  locs[count] = curr->v;
-                  count++; 
-               }
-            } else {
-               if ( notHere(locs, curr->v, count) != 0 ) {
-                  locs[count] = curr->v;
-                  count++;   
-               }
-            }
-         }
-
-         // drac never travels by rail
-         else if(rail == 1) {
-
-            int sum = rounds + player;
-
-            if ( curr->type == RAIL ) {
-               if (sum%4 == 0) {
-                  //nothing
-               } else if (sum%4 == 1) {
-                  if ( notHere(locs, curr->v, count) != 0 ) {
-                     locs[count] = curr->v;
-                     count++;   
-                  }
-               } else if (sum%4 == 2) {
-                  count = connectByRail(g,locs,curr->v,count,0);
-               } else if (sum%4 == 3) {
-                  count = connectByRail(g,locs,curr->v,count,1);
-               }     
-            }
-         }
-        
-         
-      }
-      curr = curr->next;
-   }
-   return count;
+// add item at end of Queue 
+void QueueJoin(Queue Q, int it)
+{
+   assert(Q != NULL);
+   QueueNode *new = malloc(sizeof(QueueNode));
+   assert(new != NULL);
+   new->value = it;
+   new->next = NULL;
+   if (Q->head == NULL)
+      Q->head = new;
+   if (Q->tail != NULL)
+      Q->tail->next = new;
+   Q->tail = new;
 }
+
+// remove item from front of Queue
+int QueueLeave(Queue Q)
+{
+   assert(Q != NULL);
+   assert(Q->head != NULL);
+   int it = Q->head->value;
+   QueueNode *old = Q->head;
+   Q->head = old->next;
+   if (Q->head == NULL)
+      Q->tail = NULL;
+   free(old);
+   return it;
+}
+
+// check for no items
+int QueueIsEmpty(Queue Q)
+{
+   return (Q->head == NULL);
+}
+
 
 
 // Add edges to Graph representing map of Europe
