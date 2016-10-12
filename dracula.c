@@ -12,7 +12,7 @@
 int isInTrail (DracView gameState, LocationID move);
 int isValidMove(DracView gameState, LocationID move);
 int closeToHunters(DracView gameState, LocationID move);
-//void makeDoubleBack(DracView dv);
+void makeDoubleBack(DracView dv);
 
 static int notHere(int *locs, int x, int size) {
    int i = 0;
@@ -99,8 +99,8 @@ void decideDraculaMove(DracView gameState)
             if(isInTrail (gameState, HIDE) != TRUE && idToType(whereIs(gameState, PLAYER_DRACULA)) != SEA ){
                 registerBestPlay("HI", "Goodbye"); //make a HIDE
             }else if(isInTrail (gameState, DOUBLE_BACK) != TRUE){
-                //makeDoubleBack(gameState);
-                registerBestPlay("D3", "Goodbye"); //if a HIDE is done, make an appropraite DOUBLE_BACK
+                makeDoubleBack(gameState);
+                //registerBestPlay("D3", "Goodbye"); //if a HIDE is done, make an appropraite DOUBLE_BACK
             }else{
                 registerBestPlay("TP", "Goodbye"); //otherwise, no choice but to Teleport
             }
@@ -205,6 +205,8 @@ void makeDoubleBack(DracView dv){
     }
     // i will be at the index of the "good" move
     if(found == TRUE){
+        printf("hmmm1\n");
+        printf("checking %d\n", i+1);
         switch(i+1){
             case 2:
                 registerBestPlay("D2","Mwuhahahaha");
@@ -241,4 +243,5 @@ void makeDoubleBack(DracView dv){
     }
     return;
 }  
+
      
