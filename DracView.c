@@ -1,209 +1,280 @@
-
 // DracView.c ... DracView ADT implementation
+// COMP1927 16s2 ... ... basic DracView (supplied code)
+// Code by TheGroup from COMP1927 14s2 (modified by gac & jas)
 
 #include <stdlib.h>
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "Globals.h"
+#include "Map.h"
 #include "Game.h"
 #include "GameView.h"
 #include "DracView.h"
-#include "Map.h" 
 
-#define NUM_TRAPS 2
-#define TRAPS 0
-#define VAMPS 1
-#define CHARS_PER_TURN 7
+#define wantDoubleBack 678
+#define removeDoubleBack 123
+#define END_TO_LOC_CORRECTION 37
+#define SAME_PLACE_NEXT_TURN 8
 
-static void calcTraps(char *pastPlays, DracView dv);     
+// Representation of Dracula's view of the game
+
 struct dracView {
-    GameView g;
-    int minions[NUM_MAP_LOCATIONS][NUM_TRAPS];
+    GameView game;
+    LocationID myTrail[TRAIL_SIZE]; // real locations
+    int hidden;
+    int doubleBacked;
 };
 
-// Notes:
-//      - traps and minions needs fixing
-//      - whereIs needs working specifically handling when drac makes special moves
-               
+static void hideAndDoubleBack(DracView dv, char *pastPlays);
+
+// Sets dracula's trail to real places (resolving TP's, HI's and Dn's)
+static void setMyTrail(char *pastPlays, LocationID *myTrail, DracView dv)
+{
+    int i;
+    for (i = 0; i < TRAIL_SIZE; i++) myTrail[i] = NOWHERE;
+    char *end;
+    for (end = pastPlays; *end != '\0'; end++) /*skip*/ ;
+    end--;
+    // we jump from Drac move to Drac move
+    char *p;
+    for (p = &pastPlays[32]; p < end; p += 40) {
+        if (*p == '\0') break;
+        LocationID realLoc;
+        if      (p[1] == 'T' && p[2] == 'P'){
+             realLoc = CASTLE_DRACULA;
+        }else if (p[1] == 'H' && p[2] == 'I'){ 
+            realLoc = myTrail[0];
+        }else if (p[1] == 'D' && p[2] == '1'){ 
+            realLoc = myTrail[0];
+        }else if (p[1] == 'D' && p[2] == '2'){ 
+            realLoc = myTrail[1];
+        }else if (p[1] == 'D' && p[2] == '3'){ 
+            realLoc = myTrail[2];
+        }else if (p[1] == 'D' && p[2] == '4'){ 
+            realLoc = myTrail[3];
+        }else if (p[1] == 'D' && p[2] == '5'){ 
+            realLoc = myTrail[4];
+        }else {
+            // must be a real location
+            char place[3] = { p[1], p[2], '\0' };
+            realLoc = abbrevToID(place);
+            if (realLoc == NOWHERE) fprintf(stderr,"Ooops: %s\n",place);
+        }
+        // insert location at front of trail
+        for (i = TRAIL_SIZE-1; i > 0; i--) myTrail[i] = myTrail[i-1];
+        myTrail[0] = realLoc;
+    }
+#if 0
+    fprintf(stderr,"myTrail:");
+    for (i = 0; i < TRAIL_SIZE; i++) {
+        if (myTrail[i] == NOWHERE) break;
+        fprintf(stderr," %s",idToAbbrev(myTrail[i]));
+    }
+    fprintf(stderr,"\n");
+#endif
+    return;
+}
 
 // Creates a new DracView to summarise the current state of the game
 DracView newDracView(char *pastPlays, PlayerMessage messages[])
 {
-    //REPLACE THIS WITH YOUR OWN IMPLEMENTATION
     DracView dracView = malloc(sizeof(struct dracView));
-    dracView->g = newGameView(pastPlays,messages);
-    calcTraps(pastPlays, dracView);
+    dracView->hidden = FALSE;
+    dracView->hidden = TRUE;        
+    dracView->game = newGameView(pastPlays, messages);
+    setMyTrail(pastPlays, dracView->myTrail, dracView); 
+    hideAndDoubleBack(dracView, pastPlays);
+    
     return dracView;
 }
-     
-     
+
 // Frees all memory previously allocated for the DracView toBeDeleted
 void disposeDracView(DracView toBeDeleted)
 {
-    //COMPLETE THIS IMPLEMENTATION
-    free( toBeDeleted );
+    disposeGameView(toBeDeleted->game);
+    free(toBeDeleted);
 }
 
-static void calcTraps(char *pastPlays, DracView dv){
-    char *ptr = pastPlays;
-    int i=0;
-    while(i<NUM_MAP_LOCATIONS){
-        dv->minions[i][TRAPS] = 0;
-        dv->minions[i][VAMPS] = 0;
-        i++;
-    }
-    if (giveMeTheRound(dv) == 0) {
-        return;
-    } //Dracula will not have placed any traps yet
 
-    
-    while( (*ptr != '\0'  ||  *(&ptr[1]) == '\0') ) {
-        if(ptr != pastPlays){
-            ptr++; //moves ptr to start of next turn if ptr is not at the start
-        }
-        char *abrv = malloc(3*sizeof(char));
-        abrv[0] = *(ptr+1);
-        abrv[1] = *(ptr+2);
-        abrv[2] = '\0';
-        
-        if(*ptr == 'D') {
-            if(*(ptr+3) == 'T'){
-                dv->minions[abbrevToID(abrv)][TRAPS]++;
-            } else if(*(ptr+4) == 'V'){    
-                dv->minions[abbrevToID(abrv)][VAMPS]++;
-            } else if(*(ptr+5) == 'V'){ //if vampires mature
-                LocationID trail[TRAIL_SIZE];
-                giveMeTheTrail(dv, PLAYER_DRACULA, trail); //to find out the location of dracula 6 moves ago
-                dv->minions[trail[TRAIL_SIZE-1]][VAMPS]--; //which will give the location of the placed vampire
-            } else if(*(ptr+5) == 'M'){ //if traps fall off trail
-                LocationID trail[TRAIL_SIZE];
-                giveMeTheTrail(dv, PLAYER_DRACULA, trail); 
-                dv->minions[trail[TRAIL_SIZE-1]][TRAPS]--; 
-            }
-         }
-        
-        else{ //hunters encountering the traps
-            int i = 0;
-            while (i<4){ //4 possible locations for encounters
-                if(*(ptr+(2+i)) == 'T'){
-                    dv->minions[abbrevToID(abrv)][TRAPS]--;
-                } else if(*(ptr+(2+i)) == 'V'){
-                    dv->minions[abbrevToID(abrv)][VAMPS]--;
-                }
-                i++;
-            }
-        }
-        free(abrv);
-        ptr += CHARS_PER_TURN;
-    } 
-}
 //// Functions to return simple information about the current state of the game
 
 // Get the current round
 Round giveMeTheRound(DracView currentView)
 {
-    return getRound(currentView->g);
+    return getRound(currentView->game);
 }
 
 // Get the current score
 int giveMeTheScore(DracView currentView)
 {
-    return getScore(currentView->g);
+    return getScore(currentView->game);
 }
 
 // Get the current health points for a given player
 int howHealthyIs(DracView currentView, PlayerID player)
 {
-    return getHealth(currentView->g,player);
+    return getHealth(currentView->game, player);
 }
 
 // Get the current location id of a given player
 LocationID whereIs(DracView currentView, PlayerID player)
 {
-    // hunters have to infer location of dracula when he makes a double back etc
-    // but drac must know where he is 
-
-    int location = getLocation(currentView->g,player);
-
-    if (player == PLAYER_DRACULA) {
-        // check teleport, double back, hide
-        // more complex decisions can be handled by AIs,
-        // rule breaking etc handled by jas's engine im guessing
-
-        int *t = malloc(TRAIL_SIZE*sizeof(int));
-
-        giveMeTheTrail(currentView,player,t);
-
-        if (location == TELEPORT) {
-            location = CASTLE_DRACULA;
-        } else if (location == DOUBLE_BACK_1) {
-            location = t[1];
-        } else if (location == DOUBLE_BACK_2) {
-            location = t[2];
-        } else if (location == DOUBLE_BACK_3) {
-            location = t[3];
-        } else if (location == DOUBLE_BACK_4) {
-            location = t[4];
-        } else if (location == DOUBLE_BACK_5) {
-            location = t[5];
-        }
-    }
-
-    return location;
+    if (player == PLAYER_DRACULA)
+        return currentView->myTrail[0];
+    else
+        return getLocation(currentView->game, player);
 }
 
 // Get the most recent move of a given player
 void lastMove(DracView currentView, PlayerID player,
-                 LocationID *start, LocationID *end)
+              LocationID *start, LocationID *end)
 {
-
-    *end = getLocation(currentView->g,player);
-
-    int *t = malloc(TRAIL_SIZE *sizeof(int));
-    getHistory(currentView->g,player,t);
-    
-    *start = t[1];
+    LocationID trail[TRAIL_SIZE];
+    if (player == PLAYER_DRACULA) {
+        *start = currentView->myTrail[1];
+        *end   = currentView->myTrail[0];
+    }
+    else {
+        getHistory(currentView->game, player, trail);
+        *start = trail[1];
+        *end = trail[0];
+    }
+    return;
 }
 
 // Find out what minions are placed at the specified location
 void whatsThere(DracView currentView, LocationID where,
-                         int *numTraps, int *numVamps)
+                int *numTraps, int *numVamps)
 {
-    *numTraps = currentView->minions[where][TRAPS];
-    *numVamps = currentView->minions[where][VAMPS];
-    return;
+    int traps, vamps;
+    getMinions(currentView->game, where, &traps, &vamps);
+    *numTraps = traps;
+    *numVamps = vamps;
 }
 
 //// Functions that return information about the history of the game
 
 // Fills the trail array with the location ids of the last 6 turns
 void giveMeTheTrail(DracView currentView, PlayerID player,
-                            LocationID trail[TRAIL_SIZE])
+                    LocationID trail[TRAIL_SIZE])
 {
-    getHistory(currentView->g,player,trail);
+    if (player != PLAYER_DRACULA)
+        getHistory(currentView->game, player, trail);
+    else {
+        int i;
+        for (i = 0; i < TRAIL_SIZE; i++)
+            trail[i] = currentView->myTrail[i];
+    }
+}
+
+// Fills the trail array with the location ids of the last 6 moves
+void giveMeTheMoves(DracView currentView, PlayerID player,
+                    LocationID trail[TRAIL_SIZE])
+{
+    getHistory(currentView->game, player, trail);
 }
 
 //// Functions that query the map to find information about connectivity
 
+// Helper function for whereCanIgo
+/*static int onTrail(LocationID *trail, LocationID loc)
+{
+    int i;
+    for (i = 1; i < TRAIL_SIZE-1; i++)
+        if (trail[i] == loc) return 1;
+    return 0;
+}
+*/
 // What are my (Dracula's) possible next moves (locations)
 LocationID *whereCanIgo(DracView currentView, int *numLocations, int road, int sea)
 {
-    //need to modify connectedLocations, as it requires the input of (int rail) but this function doesnt get 
-    //in int rail, as Dracula cannot move via rail
-    return connectedLocations(currentView->g,numLocations, whereIs(currentView,PLAYER_DRACULA),
-                                        PLAYER_DRACULA, giveMeTheRound(currentView) ,road, FALSE, sea);
+    LocationID *locations =
+        connectedLocations(currentView->game,
+                           numLocations,
+                           currentView->myTrail[0],
+                           PLAYER_DRACULA,
+                           getRound(currentView->game),
+                           road, FALSE, sea);
+    /*
+    // find any locations that are not allowed (e.g. hospital or in trail)
+    // connectedLocations() actually removes the hospital
+    // ... checking again here provides some safety and also some documentation
+    int i, nValid = 0;
+    int *isValid = calloc(*numLocations,sizeof(int)); // assume !valid
+    for (i = 0; i < *numLocations; i++) {
+        if (locations[i] != ST_JOSEPH_AND_ST_MARYS
+             && !onTrail(currentView->myTrail,locations[i])) {
+            isValid[i] = 1;
+            nValid++;
+        }
+    }
+
+    // make new locations array with only valid locations
+    LocationID *validLocs = malloc(nValid*sizeof(LocationID));
+    int j = 0;
+    if(mode == removeDoubleBack){
+        for (i = 0; i < *numLocations; i++) {
+            if (isValid[i]) validLocs[j++] = locations[i];
+        }
+    }else if(mode == wantDoubleBack){
+        int j = 0;
+        
+    free(locations);
+    *numLocations = nValid;
+    */
+    return locations;
 }
 
 // What are the specified player's next possible moves
 LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
                            PlayerID player, int road, int rail, int sea)
 {
-    if(player != PLAYER_DRACULA){
-        return connectedLocations(currentView->g,numLocations, whereIs(currentView,player),
-                                            player, giveMeTheRound(currentView) , road, rail, sea);
-    }else{
+    if (player == PLAYER_DRACULA)
         return whereCanIgo(currentView, numLocations, road, sea);
-    } 
+
+    LocationID *locations =
+        connectedLocations(currentView->game,
+                           numLocations,
+                           getLocation(currentView->game, player),
+                           player,
+                           getRound(currentView->game),
+                           road, rail, sea);
+    return locations;
+}
+    
+int *minPathFinder(DracView dv,int src, int dest, int *length) {
+   int *path = malloc(70*sizeof(int));
+   Map m = newMap();
+   *length = shortestPath(m,src,dest,path,0,1);
+
+   return path;
 }
 
+int haveIHidden(DracView dv){
+    if (dv->hidden != 0) return TRUE;
+    return FALSE;
+}
 
+int haveIDoubleBacked(DracView dv){
+    if (dv->doubleBacked != 0) return TRUE;
+    return FALSE;
+}
+static void hideAndDoubleBack(DracView dv, char *pastPlays){
+    dv->hidden = 0;
+    dv->doubleBacked = 0;
+
+    char *p = &pastPlays[(strlen(pastPlays)-1) - END_TO_LOC_CORRECTION];
+    int i = 0;
+    while(i<(TRAIL_SIZE-1)){
+        if(p[0] == 'H' && p[1] == 'I'){
+            dv->hidden++;
+            
+        }else if(p[0] == 'D' && (p[1] == '1' || p[1] == '2' || p[1] == '3' || p[1] == '4' || p[1] == '5')){
+            dv->doubleBacked++;
+        }
+        p-= NUM_PLAYERS*SAME_PLACE_NEXT_TURN;
+        i++;
+    }  
+    return; 
+}
