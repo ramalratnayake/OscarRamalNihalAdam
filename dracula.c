@@ -13,6 +13,7 @@ int isInTrail (DracView gameState, LocationID move);
 int isValidMove(DracView gameState, LocationID move);
 int closeToHunters(DracView gameState, LocationID move);
 void makeDoubleBack(DracView dv);
+static void printStuff(DracView gameState);
 
 static int notHere(int *locs, int x, int size) {
    int i = 0;
@@ -27,47 +28,25 @@ static int notHere(int *locs, int x, int size) {
 
 void decideDraculaMove(DracView gameState)
 {
-	// TODO ...
-	// Replace the line below by something better
     
-	if(giveMeTheRound(gameState) == 0){
+
+    if(giveMeTheRound(gameState) == 0){
         registerBestPlay("CD","Mwuhahahaha");
-    } else if(giveMeTheRound(gameState)%13 && isInTrail (gameState, HIDE) != TRUE && idToType(whereIs(gameState, PLAYER_DRACULA)) != SEA){
+    } else if(giveMeTheRound(gameState)%26 == 0 && giveMeTheRound(gameState) > 12 && isInTrail (gameState, HIDE) != TRUE && idToType(whereIs(gameState, PLAYER_DRACULA)) != SEA){
+        printStuff(gameState);
         registerBestPlay("HI","Do not react...."); //sneaky move to lure hunters to a trap
     }else {
-        printf("I am at %s\n", idToName(whereIs(gameState, PLAYER_DRACULA)));
-		int a;
-        int *locs = whereCanIgo(gameState, &a, 1,1);
-
-        //printing stuff
-        //...............................................................
-        int q = 0;
-        while (q<a){
-            printf ("%s, ", idToName(locs[q]));
-            q++;
-        }
-        printf("\n");
-    
-        int trail[TRAIL_SIZE];
-        giveMeTheTrail(gameState, PLAYER_DRACULA, trail);
-        q = 0;
-        printf("trail is...");
-        while (q<TRAIL_SIZE){
-            printf ("%d, ", trail[q]);
-            q++;
-        }
-        printf("\n");
-        //..............................................................
-        
+		printStuff(gameState);
         int i = 0;
         int index;
         int move;
         int found = FALSE;
-        
+        int a;
+        int *locs = whereCanIgo(gameState, &a, 1,1);
         if(a != 0){
             index = giveMeTheRound(gameState)%(a);
             while (i<(3*a)){ //try to find a perfect move first, then an OK move, then a retarded one 
-                move = locs[index];\
+                move = locs[index];
                 if(i>=2*a){ //a retarded move: one that is legal
                     if(isValidMove(gameState, move) == TRUE){
                         found = TRUE;
@@ -76,7 +55,7 @@ void decideDraculaMove(DracView gameState)
                         break;
                     }
                 }else if (i>=a){ //an OK move: not in the sea OR not adjacent to any hunters
-                    if(isValidMove(gameState, move) == TRUE && (closeToHunters(gameState, move) == FALSE || idToType(move) != SEA)){
+                    if(isValidMove(gameState, move) == TRUE && (idToType(move) != SEA || closeToHunters(gameState, move) == FALSE)){
                         found = TRUE;
                         registerBestPlay(idToAbbrev(move),"Mwuhahahaha");
                         printf ("my semi-genius move is %s\n", idToName(move));
@@ -100,7 +79,7 @@ void decideDraculaMove(DracView gameState)
                 registerBestPlay("HI", "Goodbye"); //make a HIDE
             }else if(isInTrail (gameState, DOUBLE_BACK) != TRUE){
                 makeDoubleBack(gameState);
-                //registerBestPlay("D3", "Goodbye"); //if a HIDE is done, make an appropraite DOUBLE_BACK
+                //registerBestPlay("D3", "Goodbye"); 
             }else{
                 registerBestPlay("TP", "Goodbye"); //otherwise, no choice but to Teleport
             }
@@ -116,29 +95,26 @@ int isInTrail (DracView gameState, LocationID move){
     LocationID trail [TRAIL_SIZE];
     giveMeTheTrail(gameState,PLAYER_DRACULA,trail);
     int  i = 0;
-    if (move == HIDE){ //look for a hide by comparing adjacent trail elements
-        while(i<TRAIL_SIZE-1){
-            if(trail[i] == trail[i+1]){
-                return TRUE;
-            }
-            i++;
-        }      
-    }else if(move == DOUBLE_BACK){ //look for any double backs by comparing all trail elements with each other
-        int j = 0;        
-        while (i<TRAIL_SIZE){
-            j = i+2;
-            while(j<TRAIL_SIZE){
-                if(trail[i] == trail[j]){
-                    return TRUE;
-                }
-                j++;
-            }
-            i++;
+    if (move == HIDE){ 
+        if(haveIHidden(gameState) == TRUE) {
+            return TRUE;
+            printf("hidden babde\n"); 
+        }  
+    }else if(move == DOUBLE_BACK){ 
+        if(haveIDoubleBacked(gameState) == TRUE){
+            return TRUE;
+            printf("back to the double\n");
         }
-    
     }else{
-        while (i< TRAIL_SIZE){
+        while (i< TRAIL_SIZE-1){
             if (move == trail[i]){
+                int j = i+1;
+                while(j<TRAIL_SIZE){
+                    if(move == trail[j] && j != TRAIL_SIZE - 1){
+                        return TRUE;
+                    }
+                    j++;
+                }
                 return TRUE;
             }
             i++;
@@ -185,47 +161,62 @@ void makeDoubleBack(DracView dv){
     LocationID trail [TRAIL_SIZE];
     printf("making double back\n");
     giveMeTheTrail(dv,PLAYER_DRACULA,trail); 
+    int a;
+    int *locs = whereCanIgo(dv, &a, 1,1);
     int i = 0;
     int found = FALSE;
-    while(i<2*(TRAIL_SIZE-1)){
-        if(i == 0 || i == TRAIL_SIZE || i == TRAIL_SIZE-1 || i == (2*TRAIL_SIZE)-1){
-            //skip...will deal with HI and D1 later and avoiding end points :)    
-        } else if(i>=(TRAIL_SIZE)){
-            if(closeToHunters(dv, trail[i%TRAIL_SIZE]) == FALSE || idToType(trail[i%TRAIL_SIZE]) != SEA){
-                found = TRUE;                    
+    int level = 1; 
+    while(level <= 3){
+        i=0;
+        while(i<(TRAIL_SIZE-1)){
+            if(level == 1 && closeToHunters(dv, trail[i]) == FALSE && idToType(trail[i]) != SEA && notHere(locs,trail[i],a) == FALSE){
+                found = TRUE;
                 break;
-            }                  
-        }else{
-            if(closeToHunters(dv, trail[i%TRAIL_SIZE]) == FALSE && idToType(trail[i%TRAIL_SIZE]) != SEA){
-                found = TRUE;    
+            }else if(level == 2 && (closeToHunters(dv, trail[i]) == FALSE || idToType(trail[i]) != SEA) && notHere(locs,trail[i],a) == FALSE){
+                found = TRUE;
+                break;
+            }else if(level == 3 && notHere(locs,trail[i],a) == FALSE && idToType(trail[i]) != SEA){
+                found = TRUE;
                 break;
             }
+            i++;
         }
-        i++;
+        if(found == TRUE) break;
+        level++;
     }
     // i will be at the index of the "good" move
-    if(found == TRUE){
-        printf("hmmm1\n");
-        printf("checking %d\n", i+1);
-        switch(i+1){
-            case 2:
-                registerBestPlay("D2","Mwuhahahaha");
-                break;                   
-            case 3:
-                registerBestPlay("D3","Mwuhahahaha");
-                break;
-            case 4:
-                registerBestPlay("D4","Mwuhahahaha");
-                break;
-            case 5:
-                registerBestPlay("D5","Mwuhahahaha");
-                break;
-        }
+    i=i%TRAIL_SIZE;
+    //if(found == TRUE){
+    switch(i){  
+        case 0:
+            registerBestPlay("D1", "Mwuhahaha");
+            return;
+        case 1:
+            registerBestPlay("D2","Mwuhahahaha");
+            return;                   
+        case 2:
+            registerBestPlay("D3","Mwuhahahaha");
+            return;
+        case 3:
+            registerBestPlay("D4","Mwuhahahaha");
+            return;
+        case 4:
+            registerBestPlay("D5","Mwuhahahaha");
+            return;
     }
+    //}
+    /*
     else{ //if a good move hasn't been found, make a random double back
-        switch(giveMeTheRound(dv)%(TRAIL_SIZE-1)){ 
+        i = 1;
+        while (i <= TRAIL_SIZE-2){
+            if (notHere(locs,trail[i],a) == FALSE){
+                break;
+            }
+            i++;
+        }
+        switch(i){ 
             case 0:
-                registerBestPlay("D2","Mwuhahahaha"); //need to change to D1 later
+                registerBestPlay("D1","Mwuhahahaha"); //need to change to D1 later
                 break;            
             case 1:
                 registerBestPlay("D2","Mwuhahahaha");
@@ -241,7 +232,38 @@ void makeDoubleBack(DracView dv){
                 break;
         }     
     }
+    */
+    registerBestPlay("D1", "Lololol");
+    printf("failsafe brah\n");
     return;
 }  
 
-     
+static void printStuff(DracView gameState){ 
+    //printing stuff
+    //...............................................................
+    printf("%d\n", giveMeTheRound(gameState));
+    if(giveMeTheRound(gameState) > 0){
+        printf("I am at %s\n", idToName(whereIs(gameState, PLAYER_DRACULA)));
+    }
+    int a;
+    int *locs = whereCanIgo(gameState, &a, 1,1);
+    int q = 0;
+    while (q<a){
+        printf ("%s, ", idToName(locs[q]));
+        q++;
+    }
+    printf("\n");
+
+    int trail[TRAIL_SIZE];
+    giveMeTheTrail(gameState, PLAYER_DRACULA, trail);
+    q = 0;
+    printf("trail is...");
+    while (q<TRAIL_SIZE){
+        printf ("%s, ", idToName(trail[q]));
+        q++;
+        if(trail[q] == -1) break;
+    }
+    printf("\n");
+    return;
+    //..............................................................  
+}
