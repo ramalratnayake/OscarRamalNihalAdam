@@ -442,7 +442,7 @@ LocationID *connectedLocations(GameView currentView, int *numLocations,
     if (drac) railLength = 0;
 
     LocationID *res;
-    res = connectedLocs(europe, numLocations, from, drac, railLength, road, sea);
+     res = reachableLocations(europe, numLocations, from, drac, railLength, road, sea);
     disposeMap(europe);
     return res;
 }
@@ -464,4 +464,17 @@ void getMinions(GameView game, LocationID where, int *numTraps, int *numVamps)
 
     *numTraps = traps;
     *numVamps = vamps;
+}
+
+LocationID *connectedLocationsNoPlayer( GameView currentView, int *numLocations,
+                               LocationID from,Round round,
+                               int road, int rail, int sea)
+{
+
+    Map europe = newMap();
+    
+    LocationID *res;
+     res = reachableLocations(europe, numLocations, from, 1, 0, road, sea);
+    disposeMap(europe);
+    return res;
 }

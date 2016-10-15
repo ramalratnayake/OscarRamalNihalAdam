@@ -1,4 +1,4 @@
-// HunterView.c ... HunterView ADT implementation
+   // HunterView.c ... HunterView ADT implementation
 // COMP1927 16s2 ... basic HunterView (supplied code)
 // Code by TheGroup from COMP1927 14s2 (modified by gac & jas)
 
@@ -17,7 +17,7 @@
 
 struct hunterView {
     GameView game;
-    PlayerMessage *storedMessages;
+    char *pp;
 };
 
 // Creates a new HunterView to summarise the current state of the game
@@ -25,17 +25,9 @@ HunterView newHunterView(char *pastPlays, PlayerMessage messages[])
 {
     HunterView hunterView = malloc(sizeof(struct hunterView));
     hunterView->game = newGameView(pastPlays, messages);
-
-
-   int turn = giveMeTheRound(hunterView)*5;
-   hunterView->storedMessages = malloc(sizeof(PlayerMessage)*turn);
+    
+    hunterView->pp = pastPlays;
    
-   int i = 0;
-    while (i < turn) {
-      strncpy(hunterView->storedMessages[i],messages[i],MESSAGE_SIZE);
-      i++;
-    }  
-
     return hunterView;
 }
 
@@ -140,20 +132,40 @@ LocationID *whereCanTheyGo(HunterView currentView, int *numLocations,
 int *minPathFinder(HunterView hv,int src, int dest, int *length) {
    int *path = malloc(70*sizeof(int));
    Map m = newMap();
-   *length = shortestPath(m,src,dest,path, ((giveMeTheRound(hv) + whoAmI(hv))%4) );
+   *length = shortestPath(m,src,dest,path, ((giveMeTheRound(hv) + whoAmI(hv))%4) ,0);
 
    return path;
 }
 
-void getMessages(HunterView h, PlayerMessage *messages)
-{
-  int i = 0;
-  int turn = giveMeTheRound(h)*5;
+int *backtraceDrac(HunterView hv) {
+   int *b = malloc(giveMeTheRound(hv) * sizeof(int));
+   char *ptr = hv->pp;
+   
+   // scan pp for all of dracs moves
+   int i = 0;   
+   while(*ptr != '\0' || *(&ptr[1]) == '\0'){ //we arent sure whether a space is added before or after a player turn has commenced
+      if(ptr != hv->pp){
+         ptr++; //moves ptr to start of next turn if ptr is not at the start
+      }
+      if(*ptr == 'D'){ //evrytime "G" is  seen, it signifies a new round 
+         char *abrv = malloc(3*sizeof(char));
+         abrv[0] = *(ptr+1);
+         abrv[1] = *(ptr+2);
+         abrv[2] = '\0';
+   
+         b[i] = abbrevToID(abrv);
+   
+         
+         i++;
+      }
+      ptr+=7; //increments ptr to space b4 next turn's info
+   } 
+   return b;
+}
 
-   while(i < turn) {
-      printf("message[%d]: %s\n",i,h->storedMessages[i]);      
-      strncpy(messages[i], h->storedMessages[i], MESSAGE_SIZE);
-      printf("message[%d]: %s\n",i,messages[i]);      
-      i++;   
-   }  
+
+int *locsNoPlayer(HunterView hv, int *numLocations, int from, int road, int rail, int sea )
+{
+
+   return connectedLocationsNoPlayer(hv->game,numLocations,from, giveMeTheRound(hv),road,rail,sea);
 }

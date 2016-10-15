@@ -118,4 +118,8 @@ LocationID *whereCanTheyGo(HunterView currentView, int *numLocations,
 
 int *minPathFinder(HunterView hv,int src, int dest, int *length);
 
+int *backtraceDrac(HunterView hv);
+
+int *locsNoPlayer(HunterView hv, int *numLocations, int from, int road, int rail, int sea );
+
 #endif

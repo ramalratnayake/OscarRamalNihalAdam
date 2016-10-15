@@ -10,8 +10,9 @@
 Notes: 
    - Random movement causes dq's; due to rail/boat connection ~~~ Fixed
      using jas's connected locations function
-   - Random movement causes dq's; unknown reason -> possibly due to health
-
+   - Random movement causes dq's; unknown reason -> Fixed
+     using jas's views
+   - Inefficiences exist 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Current Strategy:
@@ -19,14 +20,17 @@ Current Strategy:
    - if a hunter encounters dracs trail, then follow that trail
    - if drac's current location is known then predict the move and take
      take that move
+   - if drac's curr loc is known the take the shortest path
+   - else take shortest path to trail
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 Strategy ideas:
-   - have a hunter alert others if drac is spotted 
-   - have hunts move towards that position
-   - Needs to strategically rest, eg every 6 rounds rest to do research
-   - rank locations based of connected locations
-   - Shortest path function
+   - rank locations based of connected locations / probability
+   - backTrace, determine general location of drac based off past plays
+   - determine location of vampires and destroy them when they appear
+   - compare functions
+
+   - using a list, and knocking out locations of where drac can't be
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 */
@@ -40,8 +44,6 @@ Strategy ideas:
 #include "HunterView.h"
 
 #define MAX_ITERATIONS 100
-#define DRAC_FOUND 0
-
 
 static int makeRandomMove(HunterView hv,int player,int ver) {
 
@@ -59,25 +61,6 @@ static int makeRandomMove(HunterView hv,int player,int ver) {
    }
 }
 
-
-/*
-static int isLegal(HunterView hv, int move) {
-   int result = FALSE;
-
-   if(idToType(move) == SEA) {
-      result = FALSE;
-   } else {
-      result = TRUE;
-   }
-
-   return result;
-}
-
-static int randomLocation(void) {
-   int i = rand()%MAX_MAP_LOCATION;
-   return i;
-}*/
-
 static int notHere(int *locs, int x, int size) {
    int i = 0;
    while(i < size) {
@@ -90,6 +73,28 @@ static int notHere(int *locs, int x, int size) {
    // 1 -> not found
    return 1;
 }
+
+
+
+/*
+// compares the trails to all possible positions to move to 
+static int checkDracTrail(HunterView hv,int player) {
+   int *t = malloc(TRAIL_SIZE*sizeof(int));
+   giveMeTheTrail(hv,PLAYER_DRACULA,t);
+   int a;
+   int *locs = whereCanTheyGo(hv,&a,player,1,1,1);
+   
+   int x = 0;
+
+   while(x < a) {
+      if (notHere(t,locs[x],TRAIL_SIZE) == 0) {
+         return locs[x];
+      }
+      x++;
+   }
+   return -1;
+}
+*/
 
 static int checkTrail(HunterView hv, int player,int move,int version) {
    int *t = malloc(TRAIL_SIZE*sizeof(int));
@@ -112,62 +117,6 @@ static int checkTrail(HunterView hv, int player,int move,int version) {
    }   
 }
 
-// compares the trails to all possible positions to move to 
-static int checkDracTrail(HunterView hv) {
-   int *t = malloc(TRAIL_SIZE*sizeof(int));
-   giveMeTheTrail(hv,PLAYER_DRACULA,t);
-
-   int a;
-   int *locs = whereCanIgo(hv, &a, 1,1,1);
-
-   int x = 0;
-
-   while(x < a) {
-      if (notHere(t,locs[x],TRAIL_SIZE) == 0) {
-         return locs[x];
-      }
-      x++;
-   }
-   return -1;
-}
-
-// compares all possible positions drac can move to, 
-// then returns loc that matches with the hunter
-
-static int predictingDracLocs(HunterView hv) {
-   int n;
-   int *dracLocs = whereCanTheyGo(hv,&n,PLAYER_DRACULA,1,0,1);
-
-   int a;
-   int *hunterLocs = whereCanIgo(hv, &a, 1,1,1);
-
-   int dracCurrLoc = whereIs(hv,PLAYER_DRACULA);
-
-   if(validPlace(dracCurrLoc) != TRUE) {
-      return -1;
-   } else {
-      int x = 0;
-      while(x < a) {
-         if (notHere(dracLocs,hunterLocs[x],n) == 0) {
-            return hunterLocs[x];
-         }
-         x++;
-      }
-      return -1;
-   }
-}
-
-static void showArray(int *a, int l) {
-   int i = 0;
-   while(i < l) {
-      printf("%s, ",idToName(a[i]));
-      i++;
-   }
-   printf("\n");
-}
-
-// 1 for all clear
-// 0 for too close
 static int checkForOthers(HunterView hv, int player) {
    int g = whereIs(hv,PLAYER_LORD_GODALMING);
    int s = whereIs(hv,PLAYER_DR_SEWARD); 
@@ -203,16 +152,95 @@ static int checkForOthers(HunterView hv, int player) {
    }
    return -1;
 }
-/*
-static char *createMessage(int check, int move) {
-      
-   if (check == DRAC_FOUND) {
-      char *m = "! Drac trail found, move to ";
-      m[strlen(m)-1] = *(idToName(move));
-      return m;
+
+static int predictingDracLocs(HunterView hv) {
+   int n;
+   int *dracLocs = whereCanTheyGo(hv,&n,PLAYER_DRACULA,1,0,1);
+
+   int a;
+   int *hunterLocs = whereCanIgo(hv, &a, 1,1,1);
+
+   int dracCurrLoc = whereIs(hv,PLAYER_DRACULA);
+
+   if(validPlace(dracCurrLoc) != TRUE) {
+      return -1;
+   } else {
+      int x = 0;
+      while(x < a) {
+         if (notHere(dracLocs,hunterLocs[x],n) == 0) {
+            return hunterLocs[x];
+         }
+         x++;
+      }
+      return -1;
    }
-   return NULL;
+}
+
+static int inferDracLocs(HunterView hv,int from) {
+   int n;
+
+   int *dracLocs = locsNoPlayer(hv,&n,from,1,0,1);
+
+   int a;
+   int *hunterLocs = whereCanIgo(hv, &a, 1,1,1);
+
+   int x = 0;
+   while(x < a) {
+      if (notHere(dracLocs,hunterLocs[x],n) == 0) {
+         return hunterLocs[x];
+      }
+      x++;
+   }
+   return -1;
+}
+
+
+/*
+static int checkTwoArray(int *one, int oneL, int *two, int twoL) {
+   int x = 0;
+   int y = 0;
+   while(y < oneL) {
+      x = 0;
+      while(x < twoL) {
+         if(one[y] == two[x] ){
+            return two[x];
+         }
+         x++;
+      }
+      y++;
+   }
+   return -1;
 }*/
+
+static void showArray(int *a, int l) {
+   int i = 0;
+   while(i < l) {
+      if(validPlace(a[i]) == TRUE) {
+         printf("%s, ",idToName(a[i]));
+      } else {
+         printf("%d, ",a[i]);   
+      }
+      i++;
+   }
+   printf("\n");
+}
+
+static int giveDracTrail(HunterView hv) {
+   int *t = malloc(TRAIL_SIZE*sizeof(int));
+   giveMeTheTrail(hv,PLAYER_DRACULA,t);
+   int result = -1;
+   int x = TRAIL_SIZE-1;
+
+   showArray(t,TRAIL_SIZE);
+
+   while(x >= 0) {
+      if ( validPlace(t[x]) == TRUE ) {
+         result = t[x];
+      }
+      x--;
+   }
+   return result;
+}
 
 void decideHunterMove(HunterView gameState)
 {
@@ -223,119 +251,113 @@ void decideHunterMove(HunterView gameState)
 
    if(currLoc == NOWHERE ){
         if(player ==  PLAYER_LORD_GODALMING){
-            registerBestPlay(idToAbbrev(EDINBURGH),"Starting hunt in EDINBURGH......................LG");
+            registerBestPlay(idToAbbrev(EDINBURGH),"Starting hunt in Edinburgh...");
         } else if(player ==  PLAYER_DR_SEWARD){
-            registerBestPlay(idToAbbrev(CADIZ),    "Starting hunt in CADIZ............................");
+            registerBestPlay(idToAbbrev(CADIZ),    "Starting hunt in Cadiz...");
         } else if(player ==  PLAYER_VAN_HELSING){
-            registerBestPlay(idToAbbrev(SZEGED),   "Starting hunt in SZEGED...........................");
+            registerBestPlay(idToAbbrev(SZEGED),   "Starting hunt in Szeged...");
         } else if(player ==  PLAYER_MINA_HARKER){
-            registerBestPlay(idToAbbrev(BARI),     "Starting hunt in BARI.............................");
+            registerBestPlay(idToAbbrev(BARI),     "Starting hunt in Bari...");
         }
    } else {
       if (howHealthyIs(gameState, player ) < 4 ) {
-        registerBestPlay(idToAbbrev(currLoc) ,     "Hurt badly, resting...............................");
+        registerBestPlay(idToAbbrev(currLoc) ,"Hurt badly, resting...");
       } else if (round%6 == 0) {
-         registerBestPlay(idToAbbrev(currLoc) ,    "Researching.......................................");
+         registerBestPlay(idToAbbrev(currLoc) , "Researching...");
       } else {
-         int move = makeRandomMove(gameState,player,0);
-
-         printf("Health: %d\n",howHealthyIs(gameState, player ));
-
-         printf("Moving from: %s\n", idToName(currLoc));
-
-         printf("Initial move: %s\n", idToName(move));
-
+         int move = -1;
          int a;
          int *locs = whereCanIgo(gameState, &a, 1,1,1);
-
-         showArray(locs,a);
-               
-         int i = 0;
-         while(i <= MAX_ITERATIONS) { 
-            if(checkTrail(gameState,player,move,1) == 0 && checkForOthers(gameState,player) == 1 ) {
-               break;
-            }
-            move = makeRandomMove(gameState,player,0);
-            i++;
-         }
-         
-         registerBestPlay(idToAbbrev(move),"Patrolling........................................");
-
-         printf("Decision after considering connections: %s\n", idToName(move));
-
          int dracCurrLoc = whereIs(gameState,PLAYER_DRACULA);
-         if( validPlace(dracCurrLoc) != TRUE  ) {
-            // Picks a move to actively hunts dracula, if within dracs trail     
-            int check = checkDracTrail(gameState);            
-            if (check != -1 ) {
-               move = check;
+
+         if(validPlace(dracCurrLoc) == TRUE) {
+            //============================================================
+            // Dracula location is known -> goes towards it
+            //============================================================
+            if(currLoc == dracCurrLoc) {
+               int predict = predictingDracLocs(gameState);
+               if(predict != -1) {
+                  move = predict;
+                  registerBestPlay(idToAbbrev(move),"Predicting...");
+               }
+            } else {
+               int length;               
+               int *p = minPathFinder(gameState, currLoc, dracCurrLoc, &length);
                
-               if(player ==  PLAYER_LORD_GODALMING){
-                  registerBestPlay( idToAbbrev(move) ,"Found Drac's Trail, follow me!..................LG");
-               } else if(player ==  PLAYER_DR_SEWARD){
-                  registerBestPlay( idToAbbrev(move) ,"Found Drac's Trail, follow me!..................LS");
-               } else if(player ==  PLAYER_VAN_HELSING){
-                  registerBestPlay( idToAbbrev(move) ,"Found Drac's Trail, follow me!..................LV");
-               } else if(player ==  PLAYER_MINA_HARKER){
-                  registerBestPlay( idToAbbrev(move) ,"Found Drac's Trail, follow me!..................LM");
+               if (notHere(locs,p[1],a) == 0) {
+                  move = p[1];
+                  registerBestPlay(idToAbbrev(move),"Hunting Drac's trail using the shortest path I know!");
                }
             }
          } else {
-            // Picks a move to actively hunts dracula, if within dracs predicted location
+            //============================================================
+            // Dracula location is unknown -> goes towards valid trail loc
+            //============================================================
             
-            int predict = predictingDracLocs(gameState);
-            if (predict != -1 ) {
-               move = predict;                                
-               registerBestPlay(idToAbbrev(move),"Hunting Drac using prediction.....................");
-            }
-         }
-         printf("Final move (using basic strats): %s\n", idToName(move));
-      
-         // implementing more complex strategy (backtrace)
-
-
-         if( validPlace(dracCurrLoc) == TRUE ) {
-            int length;
-            int *p = minPathFinder(gameState, player, dracCurrLoc, &length);
+            int dracT = giveDracTrail(gameState);
             
-            if (notHere(locs,p[1],length) == 0) {
-               move = p[1];
-               registerBestPlay(idToAbbrev(move),"Hunting Drac using the shortest path I know!......");
-            }
-         } /*else {
-            // scan messages
-            // note: do this 4 times
-            char *m = giveMeTheMessage(gameState);
-            int l = strlen(m) -1;
-            int leader = PLAYER_LORD_GODALMING;
-            
-            int count = 1;
-         
-            while( count < 4) {
-               if(m[l-count*50 -1] == 'L') {
-                  if(m[l-count*50] == 'G') {
-                     leader = PLAYER_LORD_GODALMING;
-                  } else if (m[l-count*50] == 'S') {
-                     leader = PLAYER_DR_SEWARD;
-                  } else if (m[l-count*50] == 'V')  {
-                     leader = PLAYER_VAN_HELSING;
-                  } else if (m[l-count*50] == 'M')  {
-                     leader = PLAYER_MINA_HARKER;
+            if ( validPlace(dracT) == TRUE ){
+               printf("Drac's location is unknown using trail: %s\n", idToName(dracT)); 
+               if(currLoc == dracT) {
+                  int infer = inferDracLocs(gameState,dracT);
+                  if(infer != -1) {
+                     move = infer;
+                     registerBestPlay(idToAbbrev(move),"Infering...");
+                  }
+               } else {
+                  int length;               
+                  int *p = minPathFinder(gameState, currLoc, dracT, &length);
+                  if (notHere(locs,p[1],a) == 0) {
+                     move = p[1];
+                     registerBestPlay(idToAbbrev(move),"Hunting Drac's trail using the shortest path I know!");
                   }
                }
-               count++;            
+            } else {
+               // apply more vigorious scan of the pastplays
+               int *back = backtraceDrac(gameState);
+              
+               int i = round;
+               int check;
+               while(i >= 0) {
+                  if(validPlace(back[i]) == TRUE) {
+                     check = back[i];
+                     break;
+                  }
+                  i--;
+               }
+               
+               if(currLoc == check) {
+                  int infer = inferDracLocs(gameState,check);
+                  if(infer != -1) {
+                     move = infer;
+                     registerBestPlay(idToAbbrev(move),"Infering...");
+                  }
+               } else {
+                  int length;               
+                  int *p = minPathFinder(gameState, currLoc, check, &length);
+                  if (notHere(locs,p[1],a) == 0) {
+                     move = p[1];
+                     registerBestPlay(idToAbbrev(move),"Hunting Drac's trail using the shortest path I know!");
+                  }
+               }
             }
-            int ln;
-            int *p = minPathFinder(gameState, player, whereIs(gameState,leader), &ln);
             
-            if (notHere(locs,p[1],ln) == 0) {
-               move = p[1];
-               registerBestPlay(idToAbbrev(move),"Hunting Drac trail using the shortest path I know!");
+            if (validPlace(move) != TRUE) {
+               
+               move = makeRandomMove(gameState,player,0);
+               int i = 0;
+               while(i <= MAX_ITERATIONS) { 
+                  if(checkTrail(gameState,player,move,1) == 0 && checkForOthers(gameState,player) == 1 ) {
+                     break;
+                  }
+                  move = makeRandomMove(gameState,player,0);
+                  i++;
+               }
+               printf("Otherwise unknown (this should never happen): %s\n", idToName(move));               
+               registerBestPlay(idToAbbrev(move),"Patrolling..."); 
             }
-         }*/
-
-         printf("Final move (using more advanced strats): %s\n", idToName(move));
-         
+         }
+        
       }
    }
 }
