@@ -2,6 +2,11 @@
 // (a specialised version of the Map ADT)
 // You can change this as much as you want
 
+// All ADT's used are thanks to jas
+// jas@cse.unsw.edu.au
+// shortestPath algorithm is based off activity from week09 lab 
+// COMP1927 16s2 and uses those ADT's
+
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -24,13 +29,13 @@ struct MapRep {
 };
 
 typedef struct QueueNode {
-   int value;
-   struct QueueNode *next;
+  int value;
+  struct QueueNode *next;
 } QueueNode;
 
 typedef struct QueueRep {
-   QueueNode *head;  // ptr to first node
-   QueueNode *tail;  // ptr to last node
+  QueueNode *head;  // ptr to first node
+  QueueNode *tail;  // ptr to last node
 } QueueRep;
 
 static void addConnections(Map);
@@ -163,7 +168,7 @@ static void includeReachableByRail(Map map, int *reachable, LocationID from, int
 }
 
 
-int *connectedLocs(Map map ,int *numLocations, int from, int drac, int railLength, int road, int sea)
+int *reachableLocations(Map map ,int *numLocations, int from, int drac, int railLength, int road, int sea)
 {
     //a boolean for each location, if it is reachable
     int *reachable = calloc(NUM_MAP_LOCATIONS,sizeof (int));
@@ -206,43 +211,43 @@ int *connectedLocs(Map map ,int *numLocations, int from, int drac, int railLengt
 }
 
 // return array of locs
-int shortestPath(Map g, int src, int dest, int *path, int railLength) {
+int shortestPath(Map g, int src, int dest, int *path, int railLength, int drac,int road,int boat) {
    
-   assert(g != NULL);
+  assert(g != NULL);
    // initialising the array
 
    int visited[NUM_MAP_LOCATIONS] = {0};
 
    int *prev = malloc( NUM_MAP_LOCATIONS * sizeof(int));
-   int i = 0;
-   while(i < NUM_MAP_LOCATIONS ){
-      prev[i] = -1;
-      i++;
-   }
+  int i = 0;
+  while(i < NUM_MAP_LOCATIONS ){
+     prev[i] = -1;
+     i++;
+  }
 
    // starting from dest, working backwards
    // adding dest to the prev array   
    prev[dest] = dest;
-   
+  
    Queue q = newQueue();
-   QueueJoin(q,dest);
-   
-   while (QueueIsEmpty(q) != 1 && src != dest) {
+  QueueJoin(q,dest);
+  
+  while (QueueIsEmpty(q) != 1 && src != dest) {
       // pulling the vertex of the queue
-      int toCheck = QueueLeave(q);
+     int toCheck = QueueLeave(q);
 
       int numLocs;
-      int *locs = connectedLocs(g,&numLocs,toCheck,0,railLength,1,1);
+      int *locs = reachableLocations(g,&numLocs,toCheck,drac,railLength,road,boat);
 
-      i = 0;
-      while(i < numLocs) {
-         if ( !visited[locs[i]] ) { 
+     i = 0;
+     while(i < numLocs) {
+        if ( !visited[locs[i]] ) { 
             QueueJoin(q,locs[i]);
             prev[locs[i]] = toCheck;
             visited[locs[i]] = 1;
          }
-         i++;
-      }
+        i++;
+     }
    }
    int index = src; 
    int length = 0;
@@ -270,64 +275,64 @@ int shortestPath(Map g, int src, int dest, int *path, int railLength) {
 // create new empty Queue
 Queue newQueue()
 {
-   Queue q;
-   q = malloc(sizeof(QueueRep));
-   assert(q != NULL);
-   q->head = NULL;
-   q->tail = NULL;
-   return q;
+  Queue q;
+  q = malloc(sizeof(QueueRep));
+  assert(q != NULL);
+  q->head = NULL;
+  q->tail = NULL;
+  return q;
 }
 
 // free memory used by Queue
 void dropQueue(Queue Q)
 {
-   QueueNode *curr, *next;
-   assert(Q != NULL);
-   // free list nodes
-   curr = Q->head;
-   while (curr != NULL) {
-      next = curr->next;
-      free(curr);
-      curr = next;
-   }
-   // free queue rep
-   free(Q);
+  QueueNode *curr, *next;
+  assert(Q != NULL);
+  // free list nodes
+  curr = Q->head;
+  while (curr != NULL) {
+    next = curr->next;
+    free(curr);
+    curr = next;
+  }
+  // free queue rep
+  free(Q);
 }
 
 
 // add item at end of Queue 
 void QueueJoin(Queue Q, int it)
 {
-   assert(Q != NULL);
-   QueueNode *new = malloc(sizeof(QueueNode));
-   assert(new != NULL);
-   new->value = it;
-   new->next = NULL;
-   if (Q->head == NULL)
-      Q->head = new;
-   if (Q->tail != NULL)
-      Q->tail->next = new;
-   Q->tail = new;
+  assert(Q != NULL);
+  QueueNode *new = malloc(sizeof(QueueNode));
+  assert(new != NULL);
+  new->value = it;
+  new->next = NULL;
+  if (Q->head == NULL)
+    Q->head = new;
+  if (Q->tail != NULL)
+    Q->tail->next = new;
+  Q->tail = new;
 }
 
 // remove item from front of Queue
 int QueueLeave(Queue Q)
 {
-   assert(Q != NULL);
-   assert(Q->head != NULL);
-   int it = Q->head->value;
-   QueueNode *old = Q->head;
-   Q->head = old->next;
-   if (Q->head == NULL)
-      Q->tail = NULL;
-   free(old);
-   return it;
+  assert(Q != NULL);
+  assert(Q->head != NULL);
+  int it = Q->head->value;
+  QueueNode *old = Q->head;
+  Q->head = old->next;
+  if (Q->head == NULL)
+    Q->tail = NULL;
+  free(old);
+  return it;
 }
 
 // check for no items
 int QueueIsEmpty(Queue Q)
 {
-   return (Q->head == NULL);
+  return (Q->head == NULL);
 }
 
 

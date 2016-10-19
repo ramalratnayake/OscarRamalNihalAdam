@@ -129,11 +129,14 @@ LocationID *whereCanTheyGo(HunterView currentView, int *numLocations,
 }
 
 
-int *minPathFinder(HunterView hv,int src, int dest, int *length) {
+int *minPathFinder(HunterView hv,int src, int dest, int *length, int hunt,int road,int boat) {
    int *path = malloc(70*sizeof(int));
    Map m = newMap();
-   *length = shortestPath(m,src,dest,path, ((giveMeTheRound(hv) + whoAmI(hv))%4) ,0);
-
+   if(hunt == 1) {
+      *length = shortestPath(m,src,dest,path, ((giveMeTheRound(hv) + whoAmI(hv))%4),0,road,boat); 
+   } else {
+      *length = shortestPath(m,src,dest,path,0,1,road,boat);
+   }
    return path;
 }
 

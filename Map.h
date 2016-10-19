@@ -20,7 +20,7 @@ void disposeMap(Map g);
 void showMap(Map g); 
 int  numV(Map g);
 int  numE(Map g, TransportID t);
-int *connectedLocs(Map g ,int *length, int from, int drac, int railLength, int road, int sea);
+int *reachableLocations(Map g ,int *length, int from, int drac, int railLength, int road, int sea);
 
 
 typedef struct QueueRep *Queue;
@@ -33,5 +33,5 @@ int QueueLeave(Queue); // remove item from queue
 int QueueIsEmpty(Queue); // check for no items
 
 
-int shortestPath(Map g, int src, int dest, int *path,int railLength);
+int shortestPath(Map g, int src, int dest, int *path,int railLength, int drac,int road,int boat);
 #endif

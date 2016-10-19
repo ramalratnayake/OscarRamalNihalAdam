@@ -246,7 +246,7 @@ LocationID *whereCanTheyGo(DracView currentView, int *numLocations,
 int *minPathFinder(DracView dv,int src, int dest, int *length) {
    int *path = malloc(70*sizeof(int));
    Map m = newMap();
-   *length = shortestPath(m,src,dest,path,0,1);
+   *length = shortestPath(m,src,dest,path,0,1,1,1);
 
    return path;
 }

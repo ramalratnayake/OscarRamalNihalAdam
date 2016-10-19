@@ -137,12 +137,6 @@ int abbrevToID(char *abbrev)
    return NOWHERE;
 }
 
-char *ab(LocationID p)
-{
-   assert(validPlace(p));
-   return places[p].abbrev;
-}
-
 char *idToAbbrev(LocationID p)
 {
    assert(validPlace(p));
